@@ -51,6 +51,7 @@ class RecurrentLayer(Layer):
 
         # Apply activation function
         self.activated_sum = self.activation_func.forward(self.sum)
+        print(self.activated_sum)
 
         return self.activated_sum
 

@@ -62,7 +62,6 @@ class RecurrentNetwork:
                 print(x_train_batch)
                 print(f'output: {y_train_batch.shape}')
                 print(y_train_batch)
-                sys.exit()
 
                 # Make prediction using forward propagation
                 A, loss = self.predict(x_train_batch, y_train_batch)
