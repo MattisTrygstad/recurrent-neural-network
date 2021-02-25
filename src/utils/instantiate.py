@@ -10,8 +10,6 @@ from neural_network.activation_functions.softmax import Softmax
 from neural_network.activation_functions.tanh import Tanh
 from neural_network.loss_functions.cross_entropy import CrossEntropy
 from neural_network.loss_functions.mean_squared_error import MeanSquaredError
-from neural_network.regularizers.L1 import L1
-from neural_network.regularizers.L2 import L2
 
 
 def instantiate_activation(num: int) -> ActivationFunction:

@@ -9,7 +9,7 @@ from utils.config_parser import Config
 from utils.progress import print_progress
 
 
-class Network:
+class RecurrentNetwork:
 
     def __init__(self, loss_function: LossFunction, global_learning_rate: float) -> None:
         self.layers = []
@@ -18,12 +18,6 @@ class Network:
 
     def add_layer(self, layer: Layer) -> None:
         self.layers.append(layer)
-
-    def save_model(self, model_name: str) -> None:
-        pass
-
-    def load_model(self, model_name: str) -> list:
-        pass
 
     def predict(self, x: np.ndarray, y: np.ndarray = None, add_biases: bool = True) -> tuple:
 
@@ -61,8 +55,14 @@ class Network:
                 remaining_samples = total_training_samples - sample_num
                 current_batch_size = min(remaining_samples, batch_size)
 
-                x_train_batch = x_train[sample_num:sample_num + current_batch_size].reshape(current_batch_size, x_train.shape[-1])
+                x_train_batch = x_train[sample_num:sample_num + current_batch_size]
                 y_train_batch = y_train[sample_num:sample_num + current_batch_size]
+
+                print(f'input: {x_train_batch.shape}')
+                print(x_train_batch)
+                print(f'output: {y_train_batch.shape}')
+                print(y_train_batch)
+                sys.exit()
 
                 # Make prediction using forward propagation
                 A, loss = self.predict(x_train_batch, y_train_batch)

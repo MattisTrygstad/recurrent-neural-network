@@ -12,27 +12,26 @@ class Config:
     train_network = bool(ast.literal_eval(config.get('GLOBAL', 'train_network')))
     display_images = int(ast.literal_eval(config.get('GLOBAL', 'display_images')))
     verbose_mode = bool(ast.literal_eval(config.get('GLOBAL', 'verbose_mode')))
+    dataset_name = str(ast.literal_eval(config.get('GLOBAL', 'dataset_name')))
 
     # NETWORK
     epochs = int(ast.literal_eval(config.get('NETWORK', 'epochs')))
+    batch_size = int(ast.literal_eval(config.get('NETWORK', 'batch_size')))
     loss_function = int(ast.literal_eval(config.get('NETWORK', 'loss_function')))
-    regularizer = int(ast.literal_eval(config.get('NETWORK', 'regularizer')))
-    regularizer_rate = float(ast.literal_eval(config.get('NETWORK', 'regularizer_rate')))
     learning_rate = float(ast.literal_eval(config.get('NETWORK', 'learning_rate')))
 
     # LAYERS
-    hidden_layers = list(ast.literal_eval(config.get('LAYERS', 'hidden_layers')))
+    input_size = int(ast.literal_eval(config.get('LAYERS', 'input_size')))
+    layer_neurons = list(ast.literal_eval(config.get('LAYERS', 'layer_neurons')))
+    layer_types = list(ast.literal_eval(config.get('LAYERS', 'layer_types')))
     activation_functions = list(ast.literal_eval(config.get('LAYERS', 'activation_functions')))
     weight_ranges = list(ast.literal_eval(config.get('LAYERS', 'weight_ranges')))
     custom_learing_rates = list(ast.literal_eval(config.get('LAYERS', 'custom_learing_rates')))
-    output_activation_function = int(ast.literal_eval(config.get('LAYERS', 'output_activation_function')))
 
     # DATA_GENERATION
     dataset_size = int(ast.literal_eval(config.get('DATA_GENERATION', 'dataset_size')))
-    canvas_size = int(ast.literal_eval(config.get('DATA_GENERATION', 'canvas_size')))
-    noise_ratio = float(ast.literal_eval(config.get('DATA_GENERATION', 'noise_ratio')))
-    pos_deviaiton = float(ast.literal_eval(config.get('DATA_GENERATION', 'pos_deviaiton')))
-    line_width_deviaiton = float(ast.literal_eval(config.get('DATA_GENERATION', 'line_width_deviaiton')))
-    width_range = tuple(ast.literal_eval(config.get('DATA_GENERATION', 'width_range')))
-    height_range = tuple(ast.literal_eval(config.get('DATA_GENERATION', 'height_range')))
     split_ratios = tuple(ast.literal_eval(config.get('DATA_GENERATION', 'split_ratios')))
+    shifting_rules = list(ast.literal_eval(config.get('DATA_GENERATION', 'shifting_rules')))
+    sequence_length = int(ast.literal_eval(config.get('DATA_GENERATION', 'sequence_length')))
+    vector_length = int(ast.literal_eval(config.get('DATA_GENERATION', 'vector_length')))
+    bit_probability = float(ast.literal_eval(config.get('DATA_GENERATION', 'bit_probability')))
