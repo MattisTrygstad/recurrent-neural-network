@@ -48,7 +48,6 @@ class RecurrentNetwork:
         minibatch_counter = 0
         for epoch in range(epochs):
             epoch_loss = 0
-            regularization_loss = 0
 
             total_training_samples = x_train.shape[0]
             for sample_num in range(0, total_training_samples, batch_size):
@@ -70,7 +69,6 @@ class RecurrentNetwork:
                 # Adjust weights and biases using backward propagation
                 # dA ~ loss derivative
                 dA = self.loss_function.compute_loss_derivative(A, y_train_batch)
-                regularization_loss += final_layer.backward_pass(dA) * current_batch_size
 
                 batch_training_losses.append(round(loss / current_batch_size, 10))
 
@@ -78,8 +76,6 @@ class RecurrentNetwork:
                 print_progress(sample_num, total_training_samples, length=20)
 
             epoch_training_losses.append(round(epoch_loss / total_training_samples, 10))
-
-            regularization_losses.append(regularization_loss / total_training_samples)
 
             if x_val.any() and y_val.any():
 

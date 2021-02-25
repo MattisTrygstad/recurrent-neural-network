@@ -42,10 +42,10 @@ class RecurrentLayer(Layer):
         temp_sum = self.W_frd + self.U_frd
 
         # Add biases
-        """ if add_biases:
+        if add_biases:
             repeats = self.W_frd.shape[-1]
             new_biases = np.repeat(self.biases, repeats, axis=-1)
-            temp_sum += new_biases """
+            temp_sum += new_biases
 
         self.sum = np.transpose(temp_sum)
 
