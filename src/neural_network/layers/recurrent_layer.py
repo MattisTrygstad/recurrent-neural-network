@@ -31,13 +31,18 @@ class RecurrentLayer(Layer):
             self.name = f'recurrent{self.input_shape}'
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
+        # TODO: modify to support batch_size != 1 by doing forward pass for each sequence in inupt (?)
         # Send each case through the network from input to output
         self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases)
 
         # Multiply the outputs of the previous layer with the weights
-        self.W_frd: np.ndarray = np.transpose(self.internal_weights) @ np.transpose(self.A_previous_layer)
+        # print(np.transpose(self.internal_weights).shape)
+        # print(self.A_previous_layer.shape)
+        self.W_frd: np.ndarray = np.transpose(self.internal_weights) @ self.A_previous_layer
 
-        self.U_frd: np.ndarray = np.transpose(self.input_weights) @ np.transpose(input)
+        # print(self.input_weights.shape)
+        # print(input.shape)
+        self.U_frd: np.ndarray = np.transpose(self.input_weights) @ input
 
         temp_sum = self.W_frd + self.U_frd
 
@@ -51,7 +56,6 @@ class RecurrentLayer(Layer):
 
         # Apply activation function
         self.activated_sum = self.activation_func.forward(self.sum)
-        print(self.activated_sum)
 
         return self.activated_sum
 

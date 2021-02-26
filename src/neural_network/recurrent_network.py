@@ -22,8 +22,8 @@ class RecurrentNetwork:
     def predict(self, x: np.ndarray, y: np.ndarray = None, add_biases: bool = True) -> tuple:
 
         final_layer: Layer = self.layers[-1]
+        # TODO: support batch size with A and loss calc using for loop
         A = final_layer.forward_pass(x, add_biases)
-
         if y is not None:
             loss = self.loss_function.compute_loss(A, y)
 
@@ -43,7 +43,6 @@ class RecurrentNetwork:
         batch_training_losses = []
         validation_losses_y = []
         validation_losses_x = []
-        regularization_losses = []
 
         minibatch_counter = 0
         for epoch in range(epochs):
@@ -54,22 +53,28 @@ class RecurrentNetwork:
                 remaining_samples = total_training_samples - sample_num
                 current_batch_size = min(remaining_samples, batch_size)
 
-                x_train_batch = x_train[sample_num:sample_num + current_batch_size]
-                y_train_batch = y_train[sample_num:sample_num + current_batch_size]
+                x_train_batch = np.transpose(x_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
+                y_train_batch = np.transpose(y_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
 
-                print(f'input: {x_train_batch.shape}')
-                print(x_train_batch)
-                print(f'output: {y_train_batch.shape}')
-                print(y_train_batch)
+                # Iterate through sequence length
+                seq_length = x_train_batch.shape[0]
+                A_seq_array = np.ndarray(x_train_batch.shape, 'float64')
+                for seq_index in range(seq_length):
+                    # Make prediction using forward propagation
+                    A, loss = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
+                    A_seq_array[seq_index] = np.transpose(A)
+                    epoch_loss += loss / seq_length
 
-                # Make prediction using forward propagation
-                A, loss = self.predict(x_train_batch, y_train_batch)
-                epoch_loss += loss
+                dA_seq_array = np.ndarray(x_train_batch.shape, 'float64')
+                for seq_index in range(seq_length):
+                    # Adjust weights and biases using backward propagation
+                    # dA ~ loss derivative
+                    dA = self.loss_function.compute_loss_derivative(A_seq_array[seq_index], y_train_batch[seq_index])
+                    print(dA)
+                    dA_seq_array[seq_index] = dA
 
-                # Adjust weights and biases using backward propagation
-                # dA ~ loss derivative
-                dA = self.loss_function.compute_loss_derivative(A, y_train_batch)
-
+                    #res = final_layer.backward_pass(dA) * current_batch_size
+                sys.exit()
                 batch_training_losses.append(round(loss / current_batch_size, 10))
 
                 minibatch_counter += 1

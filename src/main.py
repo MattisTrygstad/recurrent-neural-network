@@ -47,7 +47,7 @@ def main():
         # Create network, and add input layer
         loss_function = instantiate_loss(Config.loss_function)
         network = RecurrentNetwork(loss_function, Config.learning_rate)
-        layer = InputLayer(x_train.shape[1])
+        layer = InputLayer(Config.batch_size)
         network.add_layer(layer)
 
         # Add hidden layers
