@@ -38,16 +38,15 @@ class RecurrentLayer(Layer):
         # Send each case through the network from input to output
         self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases)
 
+        #print(self.internal_weights.shape, self.activated_sum.shape)
+        #print(np.transpose(self.input_weights).shape, self.A_previous_layer.shape)
         # Multiply the outputs of the previous layer with the weights
         # TODO: SAVE FOR EACH ITERATION!! used in back prop
         self.W_frd: np.ndarray = self.internal_weights @ self.activated_sum
 
         self.U_frd: np.ndarray = np.transpose(self.input_weights) @ self.A_previous_layer
 
-        print(self.internal_weights.shape, self.activated_sum.shape)
-        print(np.transpose(self.input_weights).shape, self.A_previous_layer.shape)
-        print(self.W_frd.shape, self.U_frd.shape)
-        print()
+        #print(self.W_frd.shape, self.U_frd.shape)
         temp_sum = self.W_frd + self.U_frd
 
         # Add biases
@@ -60,6 +59,8 @@ class RecurrentLayer(Layer):
 
         # Apply activation function
         self.activated_sum = np.transpose(self.activation_func.forward(sum))
+
+        #print(f'recurrent forward output shape: {self.activated_sum.shape}')
         return self.activated_sum
 
     def multiplication_backward(self, weights: np.ndarray, frd: np.ndarray, grad: np.ndarray):

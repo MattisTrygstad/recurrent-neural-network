@@ -58,6 +58,8 @@ class RecurrentNetwork:
                 x_train_batch = np.transpose(x_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
                 y_train_batch = np.transpose(y_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
 
+                print(f'\n\ndata shape: {x_train_batch.shape}\n\n')
+
                 # Iterate through sequence length
                 seq_length = x_train_batch.shape[0]
                 A_seq_array = np.ndarray(x_train_batch.shape)
@@ -81,15 +83,15 @@ class RecurrentNetwork:
 
                     diff_s = np.zeros((final_layer.output_shape, 1))
 
-                    final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], diff_s)
+                    #final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], diff_s)
 
-                sys.exit()
-                batch_training_losses.append(round(seq_losses / current_batch_size, 10))
+                # sys.exit()
+                """ batch_training_losses.append(round(seq_losses / current_batch_size, 10))
 
                 minibatch_counter += 1
-                print_progress(sample_num, total_training_samples, length=20)
+                print_progress(sample_num, total_training_samples, length=20) """
 
-            epoch_training_losses.append(round(epoch_loss / total_training_samples, 10))
+            """ epoch_training_losses.append(round(epoch_loss / total_training_samples, 10))
 
             if x_val.any() and y_val.any():
 
@@ -103,6 +105,6 @@ class RecurrentNetwork:
                 validation_losses_y.append(validation_loss)
                 validation_losses_x.append(minibatch_counter)
 
-                print(f'Epoch: {epoch+1}/{epochs} - Validation loss: {validation_loss} - Training loss: {epoch_training_losses[epoch]}')
+                print(f'Epoch: {epoch+1}/{epochs} - Validation loss: {validation_loss} - Training loss: {epoch_training_losses[epoch]}') """
 
         return batch_training_losses, (validation_losses_x, validation_losses_y)

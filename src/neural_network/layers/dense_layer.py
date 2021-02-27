@@ -42,6 +42,7 @@ class DenseLayer(Layer):
         self.Z = weighted_sum
         # Apply activation function
         A = self.activation_func.forward(self.Z)
+        #print(f'dense forward output shape: {A.shape}')
         return A
 
     def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
