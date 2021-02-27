@@ -4,6 +4,8 @@ from turtle import forward
 import numpy as np
 from abstract_classes.layer import Layer
 from abstract_classes.loss_function import LossFunction
+from neural_network.layers.dense_layer import DenseLayer
+from neural_network.layers.recurrent_layer import RecurrentLayer
 from neural_network.loss_functions.mean_squared_error import MeanSquaredError
 from utils.config_parser import Config
 from utils.progress import print_progress
@@ -58,22 +60,25 @@ class RecurrentNetwork:
 
                 # Iterate through sequence length
                 seq_length = x_train_batch.shape[0]
-                A_seq_array = np.ndarray(x_train_batch.shape, 'float64')
+                A_seq_array = np.ndarray(x_train_batch.shape)
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
                     A, loss = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
                     A_seq_array[seq_index] = np.transpose(A)
                     epoch_loss += loss / seq_length
 
-                dA_seq_array = np.ndarray(x_train_batch.shape, 'float64')
+                dLo_seq_array = np.ndarray(x_train_batch.shape)
                 for seq_index in range(seq_length):
                     # Adjust weights and biases using backward propagation
                     # dA ~ loss derivative
-                    dA = self.loss_function.compute_loss_derivative(A_seq_array[seq_index], y_train_batch[seq_index])
-                    print(dA)
-                    dA_seq_array[seq_index] = dA
+                    dLo = self.loss_function.compute_loss_derivative(A_seq_array[seq_index], y_train_batch[seq_index])
 
-                    #res = final_layer.backward_pass(dA) * current_batch_size
+                    dLo_seq_array[seq_index] = dLo
+
+                    diff_s = np.zeros((final_layer.output_shape, 1))
+
+                    final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], diff_s)
+
                 sys.exit()
                 batch_training_losses.append(round(loss / current_batch_size, 10))
 

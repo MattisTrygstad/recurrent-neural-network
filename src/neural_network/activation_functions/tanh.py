@@ -12,5 +12,5 @@ class Tanh(ActivationFunction):
         self.activations = (np.exp(Z) - np.exp(-Z)) / (np.exp(Z) + np.exp(-Z))
         return self.activations
 
-    def backward(self, dA: np.ndarray) -> np.ndarray:
-        return dA * (1 - self.activations**2)
+    def backward(self, ds: np.ndarray) -> np.ndarray:
+        return (1 - self.activations**2) * ds

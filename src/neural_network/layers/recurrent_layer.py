@@ -56,24 +56,46 @@ class RecurrentLayer(Layer):
 
         # Apply activation function
         self.activated_sum = self.activation_func.forward(self.sum)
-
         return self.activated_sum
 
-    def backward_pass(self, dA: np.ndarray) -> float:
+    def multiplication_backward(self, weights: np.ndarray, frd: np.ndarray, grad: np.ndarray):
+        gradient_weight = grad @ np.transpose(frd)
+        chain_gradient = np.transpose(weights) @ grad
+
+        return gradient_weight, chain_gradient
+
+    def add_backward(self, U_frd: np.ndarray, W_frd: np.ndarray, dZ: np.ndarray):
+        dx1 = dZ * np.ones_like(U_frd)
+        dx2 = dZ * np.ones_like(W_frd)
+
+        return dx1, dx2
+
+    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
         # dA ~ derivative of losses
-        dZ = self.activation_func.backward(dA)
+        #dZ = self.activation_func.backward(dA)
+        W_frd = self.W_frd
+        U_frd = self.U_frd
 
-        dW = (self.A_previous_layer.transpose() @ dZ) / dZ.shape[0]
-        db = (dZ.transpose().sum(axis=-1, keepdims=True)) / dZ.shape[0]
+        # ht_activated
+        activated_sum_frd = self.activated_sum
 
-        regularizer_loss = 0
-        if self.regularizer is not None:
-            regularizer_loss = self.regularizer.compute_loss(self.internal_weights) + self.regularizer.compute_loss(self.biases)
-            self.internal_weights -= self.learning_rate * self.regularizer.regularize(self.internal_weights)
-            self.biases -= self.learning_rate * self.regularizer.regularize(self.biases)
+        dV, dsv = self.multiplication_backward(self.output_weights, activated_sum_frd, dLo)
 
-        self.internal_weights -= self.learning_rate * dW
-        self.biases -= self.learning_rate * db
+        ds = dsv + diff_s
 
-        dA_next = np.transpose(self.internal_weights @ np.transpose(dZ))
-        return regularizer_loss + self.previous_layer.backward_pass(dA_next)
+        dadd = self.activation_func.backward(ds)
+
+        dmulw, dmulu = self.add_backward(U_frd, W_frd, dadd)
+
+        dW, dprev_s = self.multiplication_backward(self.internal_weights, self.A_previous_layer, dmulw)
+        dU, dx = self.multiplication_backward(self.input_weights, input, dmulu)
+
+        # Store gradients weights updates
+        self.dprev_s = dprev_s
+
+        self.dU = dU
+        self.dW = dW
+        self.dV = dV
+
+        # TODO: which values to use for dLo and input? Use dprev_s as diff_s
+        return self.previous_layer.backward_pass(dLo, input, dprev_s)

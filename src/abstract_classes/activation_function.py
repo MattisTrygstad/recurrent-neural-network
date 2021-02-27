@@ -15,5 +15,5 @@ class ActivationFunction(ABC):
         pass
 
     @abstractmethod
-    def backward(self, dA: np.ndarray) -> np.ndarray:
+    def backward(self, ds: np.ndarray) -> np.ndarray:
         pass

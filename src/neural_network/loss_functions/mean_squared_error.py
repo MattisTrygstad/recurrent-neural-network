@@ -13,7 +13,6 @@ class MeanSquaredError(LossFunction):
         batch_size = prediction.shape[0]
         vector_size = prediction.shape[1]
 
-        print(prediction)
         for batch_index in range(batch_size):
             loss = (np.square(np.subtract(prediction[batch_index], target[batch_index]))).mean(axis=None)
             losses.append(loss / vector_size)

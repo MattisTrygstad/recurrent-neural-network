@@ -35,6 +35,7 @@ def main():
     if Config.train_network:
         # Load network configuration
         layer_neurons = Config.layer_neurons
+        layer_types = Config.layer_types
         activation_functions = Config.activation_functions
         weight_ranges = Config.weight_ranges
         custom_learing_rates = Config.custom_learing_rates
@@ -51,18 +52,17 @@ def main():
         network.add_layer(layer)
 
         # Add hidden layers
-        for index in range(0, len(layer_neurons) - 1):
+        for index in range(0, len(layer_neurons)):
             activation_function = instantiate_activation(activation_functions[index])
             learning_rate = custom_learing_rates[index] if custom_learing_rates[index] else Config.learning_rate
             weight_range = weight_ranges[index] if weight_ranges[index] else Config.weight_ranges
 
-            layer = RecurrentLayer(layer_neurons[index], layer, activation_function, learning_rate, weight_range)
-            network.add_layer(layer)
+            if layer_types[index] == 0:
+                layer = DenseLayer(layer_neurons[index], layer, activation_function, learning_rate, None, weight_range)
+            elif layer_types[index] == 1:
+                layer = RecurrentLayer(layer_neurons[index], layer, activation_function, learning_rate, weight_range)
 
-        # Output layer
-        activation_function = instantiate_activation(activation_functions[-1])
-        output = DenseLayer(layer_neurons[-1], layer, activation_function, Config.learning_rate, None)
-        network.add_layer(output)
+            network.add_layer(layer)
 
         training_losses, validation_losses_tuple = network.fit(x_train, y_train, x_val, y_val, Config.epochs, Config.batch_size)
 
