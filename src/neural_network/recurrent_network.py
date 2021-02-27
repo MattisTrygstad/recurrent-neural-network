@@ -27,13 +27,13 @@ class RecurrentNetwork:
         # TODO: support batch size with A and loss calc using for loop
         A = final_layer.forward_pass(x, add_biases)
         if y is not None:
-            loss = self.loss_function.compute_loss(A, y)
+            losses = self.loss_function.compute_loss(A, y)
 
             if Config.verbose_mode:
                 print(x)
                 print(A)
-                print(loss)
-            return A, loss
+                print(losses)
+            return A, losses
         else:
             return A, None
 
@@ -61,12 +61,16 @@ class RecurrentNetwork:
                 # Iterate through sequence length
                 seq_length = x_train_batch.shape[0]
                 A_seq_array = np.ndarray(x_train_batch.shape)
+
+                # shape: (seq_length, batch_size)
+                seq_losses = []
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
-                    A, loss = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
-                    A_seq_array[seq_index] = np.transpose(A)
-                    epoch_loss += loss / seq_length
+                    A, batch_losses = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
+                    A_seq_array[seq_index] = A
+                    seq_losses.append(batch_losses)
 
+                print(seq_losses)
                 dLo_seq_array = np.ndarray(x_train_batch.shape)
                 for seq_index in range(seq_length):
                     # Adjust weights and biases using backward propagation
@@ -80,7 +84,7 @@ class RecurrentNetwork:
                     final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], diff_s)
 
                 sys.exit()
-                batch_training_losses.append(round(loss / current_batch_size, 10))
+                batch_training_losses.append(round(seq_losses / current_batch_size, 10))
 
                 minibatch_counter += 1
                 print_progress(sample_num, total_training_samples, length=20)

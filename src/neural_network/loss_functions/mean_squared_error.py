@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from abstract_classes.loss_function import LossFunction
 
@@ -6,7 +7,8 @@ class MeanSquaredError(LossFunction):
 
     @staticmethod
     def compute_loss(prediction: np.ndarray, target: np.ndarray):
-        prediction = np.transpose(prediction)
+        # print(prediction.shape)
+        # print(target.shape)
         assert prediction.shape == target.shape
 
         losses = []
@@ -14,12 +16,14 @@ class MeanSquaredError(LossFunction):
         vector_size = prediction.shape[1]
 
         for batch_index in range(batch_size):
-            loss = (np.square(np.subtract(prediction[batch_index], target[batch_index]))).mean(axis=None)
+            # print(prediction[batch_index])
+            # print(target[batch_index])
+            loss = np.mean((np.square(prediction[batch_index] - target[batch_index])))
             losses.append(loss / vector_size)
 
-        return np.sum(losses) / batch_size
+        return losses
 
-    @staticmethod
+    @ staticmethod
     def compute_loss_derivative(prediction: np.ndarray, target: np.ndarray) -> np.ndarray:
         assert prediction.shape == target.shape
         loss_derivatives = []
@@ -29,5 +33,4 @@ class MeanSquaredError(LossFunction):
             dA = 2 * (prediction[batch_index] - target[batch_index])
             loss_derivatives.append(dA)
 
-        # TODO: remove index for batch support
-        return loss_derivatives[0]
+        return loss_derivatives

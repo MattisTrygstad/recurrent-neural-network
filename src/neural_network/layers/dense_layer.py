@@ -31,7 +31,7 @@ class DenseLayer(Layer):
         self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases)
 
         # Multiply the outputs of the previous layer with the weights
-        weighted_sum: np.ndarray = np.transpose(self.weights) @ self.A_previous_layer.transpose()
+        weighted_sum: np.ndarray = np.transpose(self.weights) @ self.A_previous_layer
 
         # Add biases
         if add_biases:
@@ -39,7 +39,7 @@ class DenseLayer(Layer):
             new_biases = np.repeat(self.biases, repeats, axis=-1)
             weighted_sum += new_biases
 
-        self.Z = weighted_sum.transpose()
+        self.Z = weighted_sum
         # Apply activation function
         A = self.activation_func.forward(self.Z)
         return A

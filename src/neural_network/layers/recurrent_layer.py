@@ -3,6 +3,7 @@ import numpy as np
 from abstract_classes.activation_function import ActivationFunction
 from abstract_classes.layer import Layer
 from abstract_classes.regularizer import Regularizer
+from utils.config_parser import Config
 
 
 class RecurrentLayer(Layer):
@@ -16,11 +17,13 @@ class RecurrentLayer(Layer):
         self.activation_func = activation_func
         self.learning_rate = learning_rate
 
+        self.activated_sum = np.zeros((output_shape, 1))
+
         # Gradient ~ dU
         self.input_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
 
         # Gradient ~ dW
-        self.internal_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
+        self.internal_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.output_shape, self.output_shape))
 
         # Gradient ~ dV
         self.output_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
@@ -31,19 +34,20 @@ class RecurrentLayer(Layer):
             self.name = f'recurrent{self.input_shape}'
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
-        # TODO: modify to support batch_size != 1 by doing forward pass for each sequence in inupt (?)
+        # TODO: modify to support batch_size != 1 by doing forward pass for each sequence in input.
         # Send each case through the network from input to output
         self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases)
 
         # Multiply the outputs of the previous layer with the weights
-        # print(np.transpose(self.internal_weights).shape)
-        # print(self.A_previous_layer.shape)
-        self.W_frd: np.ndarray = np.transpose(self.internal_weights) @ self.A_previous_layer
+        # TODO: SAVE FOR EACH ITERATION!! used in back prop
+        self.W_frd: np.ndarray = self.internal_weights @ self.activated_sum
 
-        # print(self.input_weights.shape)
-        # print(input.shape)
-        self.U_frd: np.ndarray = np.transpose(self.input_weights) @ input
+        self.U_frd: np.ndarray = np.transpose(self.input_weights) @ self.A_previous_layer
 
+        print(self.internal_weights.shape, self.activated_sum.shape)
+        print(np.transpose(self.input_weights).shape, self.A_previous_layer.shape)
+        print(self.W_frd.shape, self.U_frd.shape)
+        print()
         temp_sum = self.W_frd + self.U_frd
 
         # Add biases
@@ -52,10 +56,10 @@ class RecurrentLayer(Layer):
             new_biases = np.repeat(self.biases, repeats, axis=-1)
             temp_sum += new_biases
 
-        self.sum = np.transpose(temp_sum)
+        sum = np.transpose(temp_sum)
 
         # Apply activation function
-        self.activated_sum = self.activation_func.forward(self.sum)
+        self.activated_sum = np.transpose(self.activation_func.forward(sum))
         return self.activated_sum
 
     def multiplication_backward(self, weights: np.ndarray, frd: np.ndarray, grad: np.ndarray):
