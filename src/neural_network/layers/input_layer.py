@@ -10,7 +10,7 @@ class InputLayer(Layer):
         self.name = name
 
     def forward_pass(self, input: np.ndarray, use_biases: bool) -> None:
-        print(f'input layer forward output shape: {input.shape}')
+        #print(f'input layer forward output shape: {input.shape}')
         # print(input)
         return input
 

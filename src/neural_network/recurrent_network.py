@@ -21,11 +21,11 @@ class RecurrentNetwork:
     def add_layer(self, layer: Layer) -> None:
         self.layers.append(layer)
 
-    def predict(self, x: np.ndarray, y: np.ndarray = None, add_biases: bool = True) -> tuple:
+    def predict(self, seq_index: int, x: np.ndarray, y: np.ndarray = None, add_biases: bool = True) -> tuple:
 
         final_layer: Layer = self.layers[-1]
         # TODO: support batch size with A and loss calc using for loop
-        A = final_layer.forward_pass(x, add_biases)
+        A = final_layer.forward_pass(x, add_biases, seq_index)
         if y is not None:
             losses = self.loss_function.compute_loss(A, y)
 
@@ -58,8 +58,6 @@ class RecurrentNetwork:
                 x_train_batch = np.transpose(x_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
                 y_train_batch = np.transpose(y_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
 
-                print(f'\n\ndata shape: {x_train_batch.shape}\n\n')
-
                 # Iterate through sequence length
                 seq_length = x_train_batch.shape[0]
                 A_seq_array = np.ndarray(x_train_batch.shape)
@@ -68,11 +66,10 @@ class RecurrentNetwork:
                 seq_losses = []
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
-                    A, batch_losses = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
+                    A, batch_losses = self.predict(seq_index, x_train_batch[seq_index], y_train_batch[seq_index])
                     A_seq_array[seq_index] = A
                     seq_losses.append(batch_losses)
 
-                print(seq_losses)
                 dLo_seq_array = np.ndarray(x_train_batch.shape)
                 for seq_index in range(seq_length):
                     # Adjust weights and biases using backward propagation
@@ -85,7 +82,13 @@ class RecurrentNetwork:
 
                     #final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], diff_s)
 
-                # sys.exit()
+                # Reset RecurrentLayer class variables for next batch
+                for layer in self.layers:
+                    if isinstance(layer, RecurrentLayer):
+                        layer.activated_sum_prev_layer = []
+                        layer.activated_sum = []
+                        layer.U_frd = []
+                        layer.W_frd = []
                 """ batch_training_losses.append(round(seq_losses / current_batch_size, 10))
 
                 minibatch_counter += 1
