@@ -13,7 +13,7 @@ class Layer(ABC):
         self.output_shape = output_shape
 
     @abstractmethod
-    def forward_pass(self, input: np.ndarray, add_biases: bool, seq_index: int) -> np.ndarray:
+    def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
         """
         1. Fetch a minibatch of training cases.
         2. Send each case through the network, from the input to the output layer. At each layer (L), multiply the outputs of the upstream layer by the weights and then add in the biases. Finally, apply the activation function to these sums to produce the outputs of L.

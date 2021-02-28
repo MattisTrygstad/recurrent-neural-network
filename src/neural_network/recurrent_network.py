@@ -21,11 +21,11 @@ class RecurrentNetwork:
     def add_layer(self, layer: Layer) -> None:
         self.layers.append(layer)
 
-    def predict(self, seq_index: int, x: np.ndarray, y: np.ndarray = None, add_biases: bool = True) -> tuple:
+    def predict(self, x: np.ndarray, y: np.ndarray = None, add_biases: bool = True) -> tuple:
 
         final_layer: Layer = self.layers[-1]
         # TODO: support batch size with A and loss calc using for loop
-        A = final_layer.forward_pass(x, add_biases, seq_index)
+        A = final_layer.forward_pass(x, add_biases)
         if y is not None:
             losses = self.loss_function.compute_loss(A, y)
 
@@ -66,7 +66,7 @@ class RecurrentNetwork:
                 seq_losses = []
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
-                    A, batch_losses = self.predict(seq_index, x_train_batch[seq_index], y_train_batch[seq_index])
+                    A, batch_losses = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
                     A_seq_array[seq_index] = A
                     seq_losses.append(batch_losses)
 

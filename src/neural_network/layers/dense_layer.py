@@ -26,9 +26,9 @@ class DenseLayer(Layer):
         else:
             self.name = f'dense{self.input_shape}'
 
-    def forward_pass(self, input: np.ndarray, add_biases: bool, seq_index: int) -> np.ndarray:
+    def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
         # Send each case through the network from input to output
-        self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases, seq_index)
+        self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases)
 
         # Multiply the outputs of the previous layer with the weights
         weighted_sum: np.ndarray = np.transpose(self.weights) @ self.A_previous_layer
