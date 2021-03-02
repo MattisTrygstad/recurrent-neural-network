@@ -18,7 +18,7 @@ class RecurrentLayer(Layer):
         self.learning_rate = learning_rate
 
         # Parameter calculated during forward prop, used in back prop.
-        self.init_activated_sum = np.zeros((output_shape, 1))
+        self.init_W = np.zeros((output_shape, 1))
         self.activated_sum_prev_layer = []
         self.activated_sum = []
         self.U_frd = []
@@ -43,17 +43,19 @@ class RecurrentLayer(Layer):
         # Send each case through the network from input to output
         activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
 
-        activated_sum_prev_seq = self.init_activated_sum if len(self.activated_sum) == 0 else self.activated_sum[-1]
+        W_prev = self.init_W if len(self.W_frd) == 0 else self.W_frd[-1]
         # Multiply the outputs of the previous layer with the weights
-        W_frd: np.ndarray = np.transpose(self.internal_weights) @ activated_sum_prev_seq
+        W_frd: np.ndarray = self.internal_weights @ W_prev
 
-        # print(np.transpose(self.input_weights).shape)
-        # print(activated_sum_prev_layer.shape)
-        # print()
-        U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
-
+        # print(self.input_weights.shape)
+        # print(W_prev.shape)
         # print(W_frd.shape)
-        # print(U_frd.shape)
+
+        U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
+        print('W, U')
+        print(W_frd.shape)
+        print(U_frd.shape)
+        print()
 
         temp_sum = W_frd + U_frd
 
@@ -96,16 +98,17 @@ class RecurrentLayer(Layer):
         W_frd = self.W_frd.pop()
         U_frd = self.U_frd.pop()
 
-        # h_{k+1}
         curr_activated_sum = self.activated_sum.pop()
-        # h_{k}
         prev_activated_sum = self.activated_sum[-1]
 
         activated_sum_prev_layer = self.activated_sum_prev_layer.pop()
-        print(self.activation_func.backward(1 - W_frd**2).shape)
-        print(np.diag(np.diag(self.activation_func.backward(1 - W_frd**2))).shape)
-        print(np.transpose(self.internal_weights).shape)
-        recurrent_jacobian = np.diag(np.diag(self.activation_func.backward(1 - W_frd**2))) @ np.transpose(self.internal_weights)
+        # print(np.transpose(1 - W_frd**2))
+        print(np.diag(np.transpose(1 - W_frd**2)[0]))
+
+        recurrent_jacobian = np.diag(np.transpose(1 - W_frd**2)[0]) @ np.transpose(self.internal_weights)
+
+        print(recurrent_jacobian)
+
         sys.exit()
         ds = diff_s
 
