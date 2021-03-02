@@ -72,7 +72,6 @@ class RecurrentNetwork:
 
                 dLo_seq_array = np.ndarray(x_train_batch.shape)
                 for seq_index in range(seq_length - 1, -1, -1):
-                    print(seq_index)
                     # Adjust weights and biases using backward propagation
                     # dA ~ loss derivative
                     dLo = self.loss_function.compute_loss_derivative(activated_sum_seq_array[seq_index], y_train_batch[seq_index])
@@ -81,7 +80,6 @@ class RecurrentNetwork:
 
                     diff_s = np.zeros((final_layer.output_shape, 1))
 
-                    print('sdflksdjf')
                     final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], diff_s)
 
                 # Reset RecurrentLayer class variables for next batch

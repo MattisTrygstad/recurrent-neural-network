@@ -15,7 +15,6 @@ class CrossEntropy(LossFunction):
         vector_size = prediction.shape[1]
         # print(prediction.shape)
         # print(target.shape)
-        print(prediction)
         for batch_index in range(batch_size):
             # print(target[batch_index])
             loss = -np.sum(target[batch_index][i] * np.log2(prediction[batch_index][i]) for i in range(vector_size))

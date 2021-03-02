@@ -47,5 +47,4 @@ class DenseLayer(Layer):
 
     def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
         # TODO: implement
-        print('dense backward')
         return self.previous_layer.backward_pass(dLo, input, diff_s)

@@ -47,13 +47,13 @@ class RecurrentLayer(Layer):
         # Multiply the outputs of the previous layer with the weights
         W_frd: np.ndarray = np.transpose(self.internal_weights) @ activated_sum_prev_seq
 
-        print(np.transpose(self.input_weights).shape)
-        print(activated_sum_prev_layer.shape)
-        print()
+        # print(np.transpose(self.input_weights).shape)
+        # print(activated_sum_prev_layer.shape)
+        # print()
         U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
 
-        print(W_frd.shape)
-        print(U_frd.shape)
+        # print(W_frd.shape)
+        # print(U_frd.shape)
 
         temp_sum = W_frd + U_frd
 
@@ -70,9 +70,9 @@ class RecurrentLayer(Layer):
         self.activated_sum.append(activated_sum)
         self.U_frd.append(U_frd)
         self.W_frd.append(W_frd)
-        print()
-        print(activated_sum.shape)
-        sys.exit()
+        # print()
+        # print(activated_sum.shape)
+
         return activated_sum
 
     def multiplication_backward(self, weights: np.ndarray, frd: np.ndarray, grad: np.ndarray):
@@ -102,11 +102,10 @@ class RecurrentLayer(Layer):
         prev_activated_sum = self.activated_sum[-1]
 
         activated_sum_prev_layer = self.activated_sum_prev_layer.pop()
-        print(self.activation_func.backward(curr_activated_sum).shape)
-
-        print(np.diag(np.diag(self.activation_func.backward(curr_activated_sum))).shape)
+        print(self.activation_func.backward(1 - W_frd**2).shape)
+        print(np.diag(np.diag(self.activation_func.backward(1 - W_frd**2))).shape)
         print(np.transpose(self.internal_weights).shape)
-        recurrent_jacobian = np.diag(np.diag(self.activation_func.backward(curr_activated_sum))) @ np.transpose(self.internal_weights)
+        recurrent_jacobian = np.diag(np.diag(self.activation_func.backward(1 - W_frd**2))) @ np.transpose(self.internal_weights)
         sys.exit()
         ds = diff_s
 
