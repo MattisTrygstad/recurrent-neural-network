@@ -45,9 +45,15 @@ class RecurrentLayer(Layer):
 
         activated_sum_prev_seq = self.init_activated_sum if len(self.activated_sum) == 0 else self.activated_sum[-1]
         # Multiply the outputs of the previous layer with the weights
-        W_frd: np.ndarray = self.internal_weights @ activated_sum_prev_seq
+        W_frd: np.ndarray = np.transpose(self.internal_weights) @ activated_sum_prev_seq
 
+        print(np.transpose(self.input_weights).shape)
+        print(activated_sum_prev_layer.shape)
+        print()
         U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
+
+        print(W_frd.shape)
+        print(U_frd.shape)
 
         temp_sum = W_frd + U_frd
 
@@ -57,15 +63,16 @@ class RecurrentLayer(Layer):
             new_biases = np.repeat(self.biases, repeats, axis=-1)
             temp_sum += new_biases
 
-        sum = np.transpose(temp_sum)
-
         # Apply activation function
-        activated_sum = np.transpose(self.activation_func.forward(sum))
+        activated_sum = self.activation_func.forward(temp_sum)
 
         self.activated_sum_prev_layer.append(activated_sum_prev_layer)
         self.activated_sum.append(activated_sum)
         self.U_frd.append(U_frd)
         self.W_frd.append(W_frd)
+        print()
+        print(activated_sum.shape)
+        sys.exit()
         return activated_sum
 
     def multiplication_backward(self, weights: np.ndarray, frd: np.ndarray, grad: np.ndarray):
@@ -81,31 +88,41 @@ class RecurrentLayer(Layer):
         return dx1, dx2
 
     def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
-        # dA ~ derivative of losses
-        #dZ = self.activation_func.backward(dA)
-        W_frd = self.W_frd
-        U_frd = self.U_frd
+        # dLo ~ derivative of losses - Output jacobian
+        # Recurrent jacobian (?) derivative of output wrt. output prev iteration
+        # dU, dW ~ Weight jacobians (input, internal/recurrent) (dV)
+        # dmulw, dmulu ~ Delta jacobian
 
-        # ht_activated
-        activated_sum_frd = self.activated_sum
+        W_frd = self.W_frd.pop()
+        U_frd = self.U_frd.pop()
 
-        dV, dsv = self.multiplication_backward(self.output_weights, activated_sum_frd, dLo)
+        # h_{k+1}
+        curr_activated_sum = self.activated_sum.pop()
+        # h_{k}
+        prev_activated_sum = self.activated_sum[-1]
 
-        ds = dsv + diff_s
+        activated_sum_prev_layer = self.activated_sum_prev_layer.pop()
+        print(self.activation_func.backward(curr_activated_sum).shape)
+
+        print(np.diag(np.diag(self.activation_func.backward(curr_activated_sum))).shape)
+        print(np.transpose(self.internal_weights).shape)
+        recurrent_jacobian = np.diag(np.diag(self.activation_func.backward(curr_activated_sum))) @ np.transpose(self.internal_weights)
+        sys.exit()
+        ds = diff_s
 
         dadd = self.activation_func.backward(ds)
 
         dmulw, dmulu = self.add_backward(U_frd, W_frd, dadd)
 
-        dW, dprev_s = self.multiplication_backward(self.internal_weights, self.activated_sum_prev_layer, dmulw)
+        dW, dprev_s = self.multiplication_backward(self.internal_weights, activated_sum_prev_layer, dmulw)
         dU, dx = self.multiplication_backward(self.input_weights, input, dmulu)
 
         # Store gradients weights updates
         self.dprev_s = dprev_s
 
+        # TODO: store for each sequence
         self.dU = dU
         self.dW = dW
-        self.dV = dV
 
         # TODO: which values to use for dLo and input? Use dprev_s as diff_s
         return self.previous_layer.backward_pass(dLo, input, dprev_s)

@@ -46,13 +46,6 @@ class DenseLayer(Layer):
         return A
 
     def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
-        dZ = self.activation_func.backward(dLo)
-
-        dW = (self.A_previous_layer.transpose() @ dZ) / dZ.shape[0]
-        db = (dZ.transpose().sum(axis=-1, keepdims=True)) / dZ.shape[0]
-
-        self.weights -= self.learning_rate * dW
-        self.biases -= self.learning_rate * db
-
-        dA_next = np.transpose(self.weights @ np.transpose(dZ))
-        return self.previous_layer.backward_pass(dA_next)
+        # TODO: implement
+        print('dense backward')
+        return self.previous_layer.backward_pass(dLo, input, diff_s)
