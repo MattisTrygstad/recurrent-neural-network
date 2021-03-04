@@ -33,4 +33,4 @@ class MeanSquaredError(LossFunction):
             dLo = 2 * (prediction[batch_index] - target[batch_index])
             loss_derivatives.append(dLo)
 
-        return loss_derivatives
+        return np.array(loss_derivatives)

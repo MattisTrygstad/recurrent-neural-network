@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from abstract_classes.activation_function import ActivationFunction
 from abstract_classes.layer import Layer
+from abstract_classes.loss_function import LossFunction
 from abstract_classes.regularizer import Regularizer
 from utils.config_parser import Config
 
@@ -23,6 +24,7 @@ class RecurrentLayer(Layer):
         self.activated_sum = []
         self.U_frd = []
         self.W_frd = []
+        self.V_frd = []
 
         # Gradient ~ dU
         self.input_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
@@ -43,14 +45,13 @@ class RecurrentLayer(Layer):
         # Send each case through the network from input to output
         activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
 
-        W_prev = self.init_W if len(self.W_frd) == 0 else self.W_frd[-1]
+        W_prev_seq = self.init_W if len(self.W_frd) == 0 else self.W_frd[-1]
         # Multiply the outputs of the previous layer with the weights
-        W_frd: np.ndarray = self.internal_weights @ W_prev
+        W_frd: np.ndarray = self.internal_weights @ W_prev_seq
 
         # print(self.input_weights.shape)
         # print(W_prev.shape)
         # print(W_frd.shape)
-
         U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
         print('W, U')
         print(W_frd.shape)
@@ -68,12 +69,13 @@ class RecurrentLayer(Layer):
         # Apply activation function
         activated_sum = self.activation_func.forward(temp_sum)
 
+        V_frd = self.output_weights @ activated_sum
+
         self.activated_sum_prev_layer.append(activated_sum_prev_layer)
         self.activated_sum.append(activated_sum)
         self.U_frd.append(U_frd)
         self.W_frd.append(W_frd)
-        # print()
-        # print(activated_sum.shape)
+        self.V_frd.append(V_frd)
 
         return activated_sum
 
@@ -89,7 +91,7 @@ class RecurrentLayer(Layer):
 
         return dx1, dx2
 
-    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
+    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction) -> float:
         # dLo ~ derivative of losses - Output jacobian
         # Recurrent jacobian (?) derivative of output wrt. output prev iteration
         # dU, dW ~ Weight jacobians (input, internal/recurrent) (dV)
@@ -97,18 +99,27 @@ class RecurrentLayer(Layer):
 
         W_frd = self.W_frd.pop()
         U_frd = self.U_frd.pop()
+        V_frd = self.V_frd.pop()
 
         curr_activated_sum = self.activated_sum.pop()
         prev_activated_sum = self.activated_sum[-1]
 
         activated_sum_prev_layer = self.activated_sum_prev_layer.pop()
-        # print(np.transpose(1 - W_frd**2))
-        print(np.diag(np.transpose(1 - W_frd**2)[0]))
 
+        #print(np.diag(np.transpose(1 - W_frd**2)[0]))
+        # TODO: ref. forelesning, bruke V her??
         recurrent_jacobian = np.diag(np.transpose(1 - W_frd**2)[0]) @ np.transpose(self.internal_weights)
 
-        print(recurrent_jacobian)
+        # print(recurrent_jacobian.shape)
 
+        # TODO: sum for each timestep
+        U_grads = []
+        print(W_frd.shape)
+        sys.exit()
+        for x in range(V_frd.shape[0]):
+            U_grad = loss_function.compute_loss_derivative(W_frd[0], target[0]) @ (np.outer(1 - W_frd[x]**2, prev_activated_sum))
+
+        print(U_grad.shape)
         sys.exit()
         ds = diff_s
 

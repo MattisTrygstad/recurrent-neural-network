@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from abstract_classes.activation_function import ActivationFunction
 from abstract_classes.layer import Layer
+from abstract_classes.loss_function import LossFunction
 from abstract_classes.regularizer import Regularizer
 
 
@@ -45,6 +46,44 @@ class DenseLayer(Layer):
         #print(f'dense forward output shape: {A.shape}')
         return A
 
-    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, diff_s: np.ndarray) -> float:
+    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction) -> float:
         # TODO: implement
-        return self.previous_layer.backward_pass(dLo, input, diff_s)
+        return self.previous_layer.backward_pass(dLo, input, target, loss_function)
+
+        """
+                # Layer O
+        print(target.shape)
+        print(V_frd.shape)
+
+        output_jacobian = loss_function.compute_loss_derivative(V_frd, target)
+
+        print(output_jacobian.shape)
+        print()
+
+        V_grads = []
+        neighbor_jacobians = []
+
+        for x in range(output_jacobian.shape[0]):
+            diag = np.diag(output_jacobian[x])
+            # print((1 - V_frd[x]**2).shape)
+            # print(np.transpose(W_frd)[0].shape)
+            # print()
+            # print(diag.shape)
+            # print(np.outer(1 - V_frd[x]**2, np.transpose(W_frd)[0]).shape)
+            V_grad = diag @ np.outer(1 - V_frd[x]**2, np.transpose(W_frd)[0])
+
+            # print(V_grad.shape)
+            V_grads.append(V_grad)
+
+            print(np.diag(1 - V_frd[x]).shape)
+            print(self.output_weights.shape)
+            neighbor_jacobian = np.diag(1 - V_frd[x]**2) @ self.output_weights
+            print(neighbor_jacobian)
+            sys.exit()
+
+        V_grads = np.array(V_grads)
+
+        print(V_grads.shape)
+
+
+        """
