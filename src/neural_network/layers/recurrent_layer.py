@@ -49,14 +49,13 @@ class RecurrentLayer(Layer):
         # Multiply the outputs of the previous layer with the weights
         W_frd: np.ndarray = self.internal_weights @ W_prev_seq
 
-        # print(self.input_weights.shape)
-        # print(W_prev.shape)
-        # print(W_frd.shape)
         U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
-        print('W, U')
-        print(W_frd.shape)
+
+        print(np.transpose(self.input_weights).shape)
+        print(activated_sum_prev_layer.shape)
         print(U_frd.shape)
-        print()
+
+        sys.exit()
 
         temp_sum = W_frd + U_frd
 
@@ -70,6 +69,8 @@ class RecurrentLayer(Layer):
         activated_sum = self.activation_func.forward(temp_sum)
 
         V_frd = self.output_weights @ activated_sum
+
+        print(f'V{V_frd.shape}')
 
         self.activated_sum_prev_layer.append(activated_sum_prev_layer)
         self.activated_sum.append(activated_sum)
@@ -111,15 +112,21 @@ class RecurrentLayer(Layer):
         recurrent_jacobian = np.diag(np.transpose(1 - W_frd**2)[0]) @ np.transpose(self.internal_weights)
 
         # print(recurrent_jacobian.shape)
-
-        # TODO: sum for each timestep
+        print((U_frd.shape))
         U_grads = []
-        print(W_frd.shape)
-        sys.exit()
-        for x in range(V_frd.shape[0]):
-            U_grad = loss_function.compute_loss_derivative(W_frd[0], target[0]) @ (np.outer(1 - W_frd[x]**2, prev_activated_sum))
 
-        print(U_grad.shape)
+        sys.exit()
+        print(V_frd.shape)
+        print(target.shape)
+        print(loss_function.compute_loss_derivative(V_frd, target).shape)
+        print()
+        print(V_frd.shape)
+        print(activated_sum_prev_layer.shape)
+        print()
+        # TODO: add together all timesteps
+        V_grad = [np.diag(loss_function.compute_loss_derivative(V_frd[x], target[x])) @ (np.outer(1 - V_frd[x]**2, activated_sum_prev_layer[x])) for x in range(V_frd.shape[0])]
+        V_grad = np.array(V_grad)
+        print(V_grad.shape)
         sys.exit()
         ds = diff_s
 
