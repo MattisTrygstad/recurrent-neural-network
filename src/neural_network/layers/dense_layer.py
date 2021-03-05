@@ -65,15 +65,12 @@ class DenseLayer(Layer):
 
         V_grad_prev_seq = np.zeros_like(self.weights) if len(self.V_grads) == 0 else self.V_grads[-1]
 
-        # TODO: Add shapes
+        # TODO: Comment shapes
         V_grad = [np.transpose(V_grad_prev_seq) + np.diag(output_jacobian[x]) @ np.outer((1 - activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
         V_grad = np.transpose(np.sum(V_grad, axis=0))
 
         self.V_grads.append(V_grad)
         print('V_grad', V_grad.shape)
-
-        # print((1 - activated_sum**2).shape)
-        # print(np.transpose(self.weights).shape)
 
         neighbor_jacobian = [np.diag(1 - activated_sum[x]**2) @ np.transpose(self.weights) for x in range(batch_size)]
         neighbor_jacobian = np.sum(neighbor_jacobian, axis=0)

@@ -79,9 +79,7 @@ class RecurrentNetwork:
 
                     dLo_seq_array.append(dLo)
 
-                    diff_s = np.zeros((final_layer.output_shape, 1))
-
-                    final_dprev_s = final_layer.backward_pass(dLo)
+                    output_jacobian = final_layer.backward_pass(dLo)
 
                 # Reset RecurrentLayer class variables for next batch
                 for layer in self.layers:
@@ -91,6 +89,7 @@ class RecurrentNetwork:
                         layer.U_grads = []
                         layer.W_grads = []
                         layer.delta_jacobians = []
+
                     if isinstance(layer, DenseLayer):
                         self.activated_sums = []
                         self.activated_sums_prev_layer = []

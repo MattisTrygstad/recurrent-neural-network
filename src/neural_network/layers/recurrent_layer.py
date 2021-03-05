@@ -46,9 +46,7 @@ class RecurrentLayer(Layer):
         # Send each case through the network from input to output
         activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
         activated_sum_prev_seq = np.zeros((1, self.output_shape)) if len(self.activated_sums) == 0 else self.activated_sums[-1]
-        # Multiply the outputs of the previous layer with the weights
-        print(np.transpose(self.internal_weights).shape)
-        print(activated_sum_prev_seq.shape)
+
         W_frd: np.ndarray = np.transpose(self.internal_weights) @ np.transpose(activated_sum_prev_seq)
 
         U_frd: np.ndarray = np.transpose(self.input_weights) @ np.transpose(activated_sum_prev_layer)
@@ -83,7 +81,6 @@ class RecurrentLayer(Layer):
             U_grad_prev_seq = np.zeros_like(self.input_weights)
 
             # Delta jacobian params
-            recurrent_jacobian = 0
             delta_jacobian = output_jacobian
         else:
             # Weight grad params
@@ -106,14 +103,14 @@ class RecurrentLayer(Layer):
         print('delta_jacobian', delta_jacobian.shape)
 
         # Shapes: W_grad = W_grad_prev_seq = (recurrent_size, recurrent_size), output_jacobian = (batch_size, bit_vector_size), curr_activated_sum = prev_activated_sum = (batch_size, recurrent_size)
-        W_grad = [np.transpose(W_grad_prev_seq) + np.diag(output_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
+        W_grad = [np.transpose(W_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
         W_grad = np.transpose(np.sum(W_grad, axis=0))
         self.W_grads.append(W_grad)
 
         print('W_grad', W_grad.shape)
 
         # TODO: Add shapes
-        U_grad = [np.transpose(U_grad_prev_seq) + np.diag(output_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
+        U_grad = [np.transpose(U_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
         U_grad = np.transpose(np.sum(U_grad, axis=0))
         self.U_grads.append(U_grad)
         print('U_grad', U_grad.shape)
