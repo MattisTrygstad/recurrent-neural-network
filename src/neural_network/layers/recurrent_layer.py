@@ -110,10 +110,6 @@ class RecurrentLayer(Layer):
         print('W_grad', W_grad.shape)
 
         # TODO: Add shapes
-        print(np.transpose(U_grad_prev_seq).shape)
-        print(delta_jacobian.shape)
-        print(curr_activated_sum.shape)
-        print(activated_sum_prev_layer.shape)
         U_grad = [np.transpose(U_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
         U_grad = np.transpose(np.sum(U_grad, axis=0))
         self.U_grads.append(U_grad)
