@@ -50,12 +50,10 @@ class RecurrentLayer(Layer):
 
         print(W_frd.shape)
         print()
-        # print('U factors')
-        # print(np.transpose(self.input_weights).shape)
-        # print(activated_sum_prev_layer.shape)
+
         print(self.input_weights.shape)
         print(activated_sum_prev_layer.shape)
-        U_frd: np.ndarray = np.transpose(self.input_weights) @ np.transpose(activated_sum_prev_layer)
+        U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
 
         print(U_frd.shape)
 

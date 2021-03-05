@@ -25,17 +25,18 @@ class RecurrentNetwork:
 
         final_layer: Layer = self.layers[-1]
         # TODO: support batch size with A and loss calc using for loop
-        A = final_layer.forward_pass(x, add_biases)
+        prediction = final_layer.forward_pass(np.transpose(x), add_biases)
+        prediction = np.transpose(prediction)
         if y is not None:
-            losses = self.loss_function.compute_loss(A, y)
+            losses = self.loss_function.compute_loss(prediction, y)
 
             if Config.verbose_mode:
                 print(x)
-                print(A)
+                print(prediction)
                 print(losses)
-            return A, losses
+            return prediction, losses
         else:
-            return A, None
+            return prediction, None
 
     def fit(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, epochs: int, batch_size: int = 64) -> tuple:
 
@@ -66,9 +67,9 @@ class RecurrentNetwork:
                 seq_losses = []
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
-                    A, batch_losses = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
+                    prediction, batch_losses = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
 
-                    activated_sum_seq_array.append(A)
+                    activated_sum_seq_array.append(prediction)
                     seq_losses.append(batch_losses)
 
                 dLo_seq_array = []

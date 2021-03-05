@@ -20,6 +20,9 @@ class DenseLayer(Layer):
         self.regularizer = regularizer
 
         self.activated_sums = []
+        self.activated_sums_prev_layer = []
+
+        self.V_grads = []
 
         # Stored forward prop output for current layer, used in back prop
         self.Z = None
@@ -31,11 +34,13 @@ class DenseLayer(Layer):
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
         # Send each case through the network from input to output
-        self.activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
+        activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
+        self.activated_sums_prev_layer.append(activated_sum_prev_layer)
+
         # Multiply the outputs of the previous layer with the weights
         print('weights', self.weights.shape)
-        print('prev_layer', self.activated_sum_prev_layer.shape)
-        weighted_sum: np.ndarray = np.transpose(self.weights) @ self.activated_sum_prev_layer
+        print('prev_layer', activated_sum_prev_layer.shape)
+        weighted_sum: np.ndarray = np.transpose(self.weights) @ activated_sum_prev_layer
         print('sum', weighted_sum.shape)
         # Add biases
         if add_biases:
@@ -48,7 +53,7 @@ class DenseLayer(Layer):
         activated_sum = self.activation_func.forward(Z)
 
         self.activated_sums.append(activated_sum)
-        #print(f'dense forward output shape: {A.shape}')
+        # print(f'dense forward output shape: {A.shape}')
 
         print()
         print('forward', activated_sum.shape)
@@ -58,13 +63,28 @@ class DenseLayer(Layer):
         # dLo ~ Output Jacobian
 
         activated_sum = self.activated_sums.pop()
+        batch_size = dLo.shape[0]
 
+        activated_sum_prev_layer = self.activated_sums_prev_layer.pop()
+        print('V_grad')
         print(dLo.shape)
-        print()
-        print((1 - activated_sum**2).shape)
-        print(self.activated_sum_prev_layer.shape)
+        print(np.transpose(1 - activated_sum**2).shape)
+        print(np.transpose(activated_sum_prev_layer).shape)
 
-        V_grad = np.diag(dLo) @ np.outer((1 - activated_sum**2), self.activated_sum_prev_layer)
+        print()
+        V_grad_prev_seq = 0 if len(self.V_grads) == 0 else self.V_grads[-1]
+
+        V_grad = [V_grad_prev_seq + np.diag(dLo[x]) @ np.outer(np.transpose(1 - activated_sum**2)[x], np.transpose(activated_sum_prev_layer)[x]) for x in range(batch_size)]
+        V_grad = np.array(np.transpose(V_grad, (0, 2, 1)))
+
+        print(V_grad.shape)
+        self.V_grads.append(V_grad)
+
+        print('neighbor_jacobian')
+        print((1 - activated_sum**2).shape)
+        print(self.weights.shape)
+
+        neighbor_jacobian = [np.diag(1 - activated_sum[x]**2) @ self.weights for x in range(batch_size)]
 
         sys.exit()
         return self.previous_layer.backward_pass(dLo, input, target, loss_function, output_pred)
