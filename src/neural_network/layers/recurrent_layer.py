@@ -48,14 +48,16 @@ class RecurrentLayer(Layer):
         # Multiply the outputs of the previous layer with the weights
         W_frd: np.ndarray = self.internal_weights @ W_prev_seq
 
+        print(W_frd.shape)
+        print()
         # print('U factors')
         # print(np.transpose(self.input_weights).shape)
         # print(activated_sum_prev_layer.shape)
-        U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
+        print(self.input_weights.shape)
+        print(activated_sum_prev_layer.shape)
+        U_frd: np.ndarray = np.transpose(self.input_weights) @ np.transpose(activated_sum_prev_layer)
 
-        print()
         print(U_frd.shape)
-        print(W_frd.shape)
 
         temp_sum = W_frd + U_frd
 
@@ -68,7 +70,7 @@ class RecurrentLayer(Layer):
         # Apply activation function
         activated_sum = self.activation_func.forward(temp_sum)
 
-        V_frd = self.output_weights @ activated_sum
+        #V_frd = self.output_weights @ activated_sum
 
         # print(f'V{V_frd.shape}')
 
@@ -76,7 +78,7 @@ class RecurrentLayer(Layer):
         self.activated_sum.append(activated_sum)
         self.U_frd.append(U_frd)
         self.W_frd.append(W_frd)
-        self.V_frd.append(V_frd)
+        # self.V_frd.append(V_frd)
 
         return activated_sum
 

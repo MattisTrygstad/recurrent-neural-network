@@ -19,6 +19,8 @@ class DenseLayer(Layer):
         self.learning_rate = learning_rate
         self.regularizer = regularizer
 
+        self.activated_sums = []
+
         # Stored forward prop output for current layer, used in back prop
         self.Z = None
 
@@ -29,25 +31,42 @@ class DenseLayer(Layer):
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
         # Send each case through the network from input to output
-        self.A_previous_layer = self.previous_layer.forward_pass(input, add_biases)
-
+        self.activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
         # Multiply the outputs of the previous layer with the weights
-        weighted_sum: np.ndarray = np.transpose(self.weights) @ self.A_previous_layer
-
+        print('weights', self.weights.shape)
+        print('prev_layer', self.activated_sum_prev_layer.shape)
+        weighted_sum: np.ndarray = np.transpose(self.weights) @ self.activated_sum_prev_layer
+        print('sum', weighted_sum.shape)
         # Add biases
         if add_biases:
             repeats = weighted_sum.shape[-1]
             new_biases = np.repeat(self.biases, repeats, axis=-1)
             weighted_sum += new_biases
 
-        self.Z = weighted_sum
+        Z = weighted_sum
         # Apply activation function
-        A = self.activation_func.forward(self.Z)
+        activated_sum = self.activation_func.forward(Z)
+
+        self.activated_sums.append(activated_sum)
         #print(f'dense forward output shape: {A.shape}')
-        return A
+
+        print()
+        print('forward', activated_sum.shape)
+        return activated_sum
 
     def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction, output_pred: np.ndarray) -> float:
-        # TODO: implement
+        # dLo ~ Output Jacobian
+
+        activated_sum = self.activated_sums.pop()
+
+        print(dLo.shape)
+        print()
+        print((1 - activated_sum**2).shape)
+        print(self.activated_sum_prev_layer.shape)
+
+        V_grad = np.diag(dLo) @ np.outer((1 - activated_sum**2), self.activated_sum_prev_layer)
+
+        sys.exit()
         return self.previous_layer.backward_pass(dLo, input, target, loss_function, output_pred)
 
         """

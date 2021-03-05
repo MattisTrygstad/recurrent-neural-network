@@ -7,8 +7,7 @@ class MeanSquaredError(LossFunction):
 
     @staticmethod
     def compute_loss(prediction: np.ndarray, target: np.ndarray) -> list:
-        # print(prediction.shape)
-        # print(target.shape)
+        target = np.transpose(target)
         assert prediction.shape == target.shape
 
         losses = []
@@ -25,6 +24,7 @@ class MeanSquaredError(LossFunction):
 
     @ staticmethod
     def compute_loss_derivative(prediction: np.ndarray, target: np.ndarray) -> np.ndarray:
+        target = np.transpose(target)
         assert prediction.shape == target.shape
         loss_derivatives = []
         batch_size = prediction.shape[0]

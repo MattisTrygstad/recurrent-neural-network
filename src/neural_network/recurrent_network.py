@@ -60,23 +60,24 @@ class RecurrentNetwork:
 
                 # Iterate through sequence length
                 seq_length = x_train_batch.shape[0]
-                activated_sum_seq_array = np.ndarray(x_train_batch.shape)
+                activated_sum_seq_array = []
 
                 # shape: (seq_length, batch_size)
                 seq_losses = []
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
                     A, batch_losses = self.predict(x_train_batch[seq_index], y_train_batch[seq_index])
-                    activated_sum_seq_array[seq_index] = A
+
+                    activated_sum_seq_array.append(A)
                     seq_losses.append(batch_losses)
 
-                dLo_seq_array = np.ndarray(x_train_batch.shape)
+                dLo_seq_array = []
                 for seq_index in range(seq_length - 1, -1, -1):
                     # Adjust weights and biases using backward propagation
 
                     dLo = self.loss_function.compute_loss_derivative(activated_sum_seq_array[seq_index], y_train_batch[seq_index])
 
-                    dLo_seq_array[seq_index] = dLo
+                    dLo_seq_array.append(dLo)
 
                     diff_s = np.zeros((final_layer.output_shape, 1))
 
