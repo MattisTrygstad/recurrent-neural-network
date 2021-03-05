@@ -86,9 +86,14 @@ class RecurrentNetwork:
                 # Reset RecurrentLayer class variables for next batch
                 for layer in self.layers:
                     if isinstance(layer, RecurrentLayer):
-                        layer.activated_sum_prev_layer = []
-                        layer.activated_sum = []
-                        layer.U_frd = []
-                        layer.W_frd = []
+                        layer.activated_sums_prev_layer = []
+                        layer.activated_sums = []
+                        layer.U_grads = []
+                        layer.W_grads = []
+                        layer.delta_jacobians = []
+                    if isinstance(layer, DenseLayer):
+                        self.activated_sums = []
+                        self.activated_sums_prev_layer = []
+                        self.V_grads = []
 
         return batch_training_losses, (validation_losses_x, validation_losses_y)

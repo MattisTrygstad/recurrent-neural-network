@@ -19,9 +19,11 @@ class DenseLayer(Layer):
         self.learning_rate = learning_rate
         self.regularizer = regularizer
 
+        # Forward prop params
         self.activated_sums = []
         self.activated_sums_prev_layer = []
 
+        # Backward prop params
         self.V_grads = []
 
         # Stored forward prop output for current layer, used in back prop
