@@ -46,9 +46,9 @@ class DenseLayer(Layer):
         #print(f'dense forward output shape: {A.shape}')
         return A
 
-    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction) -> float:
+    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction, output_pred: np.ndarray) -> float:
         # TODO: implement
-        return self.previous_layer.backward_pass(dLo, input, target, loss_function)
+        return self.previous_layer.backward_pass(dLo, input, target, loss_function, output_pred)
 
         """
                 # Layer O

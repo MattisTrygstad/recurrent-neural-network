@@ -80,7 +80,7 @@ class RecurrentNetwork:
 
                     diff_s = np.zeros((final_layer.output_shape, 1))
 
-                    final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], x_train_batch[seq_index], self.loss_function)
+                    final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], x_train_batch[seq_index], self.loss_function, activated_sum_seq_array[seq_index])
 
                 # Reset RecurrentLayer class variables for next batch
                 for layer in self.layers:
