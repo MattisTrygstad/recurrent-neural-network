@@ -19,12 +19,15 @@ class RecurrentLayer(Layer):
         self.learning_rate = learning_rate
 
         # Parameter calculated during forward prop, used in back prop.
-        self.init_W = np.zeros((output_shape, 1))
         self.activated_sum_prev_layer = []
         self.activated_sum = []
         self.U_frd = []
         self.W_frd = []
-        self.V_frd = []
+
+        # Backprop parameters
+        self.delta_jacobians = []
+        self.W_grads = []
+        self.U_grads = []
 
         # Gradient ~ dU
         self.input_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
@@ -41,21 +44,17 @@ class RecurrentLayer(Layer):
             self.name = f'recurrent{self.input_shape}'
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
+        print('recurrent forward')
         # Send each case through the network from input to output
         activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
 
-        W_prev_seq = self.init_W if len(self.W_frd) == 0 else self.W_frd[-1]
+        activated_sum_prev_seq = np.zeros((1, self.output_shape)) if len(self.activated_sum) == 0 else self.activated_sum[-1]
         # Multiply the outputs of the previous layer with the weights
-        W_frd: np.ndarray = self.internal_weights @ W_prev_seq
+        print(np.transpose(self.internal_weights).shape)
+        print(activated_sum_prev_seq.shape)
+        W_frd: np.ndarray = np.transpose(self.internal_weights) @ np.transpose(activated_sum_prev_seq)
 
-        print(W_frd.shape)
-        print()
-
-        print(self.input_weights.shape)
-        print(activated_sum_prev_layer.shape)
         U_frd: np.ndarray = np.transpose(self.input_weights) @ np.transpose(activated_sum_prev_layer)
-
-        print(U_frd.shape)
 
         temp_sum = W_frd + U_frd
 
@@ -68,103 +67,71 @@ class RecurrentLayer(Layer):
         # Apply activation function
         activated_sum = np.transpose(self.activation_func.forward(temp_sum))
 
-        #V_frd = self.output_weights @ activated_sum
-
-        # print(f'V{V_frd.shape}')
-
         self.activated_sum_prev_layer.append(activated_sum_prev_layer)
         self.activated_sum.append(activated_sum)
         self.U_frd.append(U_frd)
         self.W_frd.append(W_frd)
-        # self.V_frd.append(V_frd)
 
         return activated_sum
 
-    def multiplication_backward(self, weights: np.ndarray, frd: np.ndarray, grad: np.ndarray):
-        gradient_weight = grad @ np.transpose(frd)
-        chain_gradient = np.transpose(weights) @ grad
-
-        return gradient_weight, chain_gradient
-
-    def add_backward(self, U_frd: np.ndarray, W_frd: np.ndarray, dZ: np.ndarray):
-        dx1 = dZ * np.ones_like(U_frd)
-        dx2 = dZ * np.ones_like(W_frd)
-
-        return dx1, dx2
-
-    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction, output_pred: np.ndarray) -> float:
-        # dLo ~ derivative of losses - Output jacobian
-        # Recurrent jacobian (?) derivative of output wrt. output prev iteration
-        # dU, dW ~ Weight jacobians (input, internal/recurrent) (dV)
-        # dmulw, dmulu ~ Delta jacobian
-
-        W_frd = self.W_frd.pop()
-        U_frd = self.U_frd.pop()
-        V_frd = self.V_frd.pop()
-        V_frd_prev_seq = self.V_frd[-1]
-
-        curr_activated_sum = self.activated_sum.pop()
-        prev_activated_sum = self.activated_sum[-1]
+    def backward_pass(self, output_jacobian: np.ndarray) -> float:
+        print('\nbackprop recurrent')
+        self.W_frd.pop()
+        curr_activated_sum = self.activated_sum[-1]
+        prev_activated_sum = np.zeros_like(output_jacobian) if len(self.W_frd) == 0 else self.activated_sum[-2]
 
         activated_sum_prev_layer = self.activated_sum_prev_layer.pop()
 
-        #print(np.diag(np.transpose(1 - W_frd**2)[0]))
-        # TODO: ref. forelesning, bruke V her??
-        recurrent_jacobian = np.diag(np.transpose(1 - W_frd**2)[0]) @ np.transpose(self.internal_weights)
+        batch_size = output_jacobian.shape[0]
 
-        # print(recurrent_jacobian.shape)
+        # First sequence in backprop
+        if len(self.delta_jacobians) == 0:
+            # Weigh grad params
+            W_grad_prev_seq = np.zeros_like(self.internal_weights)
+            U_grad_prev_seq = np.zeros_like(self.input_weights)
 
-        print('backprop')
-        print(activated_sum_prev_layer.shape)
-        print(target.shape)
+            # Delta jacobian params
+            recurrent_jacobian = 0
+            delta_jacobian = output_jacobian
+        else:
+            # Weight grad params
+            W_grad_prev_seq = self.W_grads[-1]
+            U_grad_prev_seq = self.U_grads[-1]
 
-        loss_derivative = loss_function.compute_loss_derivative(activated_sum_prev_layer, target)
-        print(loss_derivative.shape)
+            # Delta jacobian params
+            next_activated_sum = self.activated_sum.pop()
+            delta_jacobian_prev_seq = self.delta_jacobians[-1]
 
-        U_grad = [np.diag(loss_function.compute_loss_derivative(V_frd[x], target[x])) @ (np.outer(1 - V_frd[x]**2, input[x])) for x in range(activated_sum_prev_layer.shape[0])]
-        U_grad = np.array(U_grad)
+            recurrent_jacobian = [np.diag((1 - next_activated_sum[x]**2)) @ np.transpose(self.internal_weights) for x in range(batch_size)]
+            recurrent_jacobian = np.sum(recurrent_jacobian, axis=0)
+            delta_jacobian = output_jacobian + delta_jacobian_prev_seq @ recurrent_jacobian
 
-        print(U_grad.shape)
-        print(self.input_weights.shape)
+        self.delta_jacobians.append(delta_jacobian)
 
-        V_grad = [np.diag(loss_function.compute_loss_derivative(output_pred[x], target[x])) @ (np.outer(1 - output_pred[x]**2, input[x])) for x in range(output_pred.shape[0])]
-        V_grad = np.array(V_grad)
-        print(V_grad.shape)
-        print(self.output_weights.shape)
+        print('delta_jacobian', delta_jacobian.shape)
+        print(curr_activated_sum.shape, prev_activated_sum.shape)
 
-        W_grad = [np.diag(loss_function.compute_loss_derivative(V_frd[x], target[x])) @ (np.outer(1 - V_frd[x]**2, V_frd_prev_seq[x])) for x in range(V_frd.shape[0])]
-        W_grad = np.array(W_grad)
-        print(W_grad.shape)
-        print(self.internal_weights.shape)
-        sys.exit()
-        print(V_frd.shape)
-        print(target.shape)
-        print(loss_function.compute_loss_derivative(V_frd, target).shape)
+        # Shapes: W_grad = W_grad_prev_seq = (recurrent_size, recurrent_size), output_jacobian = (batch_size, bit_vector_size), curr_activated_sum = prev_activated_sum = (batch_size, recurrent_size)
+        W_grad = [np.transpose(W_grad_prev_seq) + np.diag(output_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
+        W_grad = np.transpose(np.sum(W_grad, axis=0))
+        self.W_grads.append(W_grad)
+
+        print('W_grad', W_grad.shape)
         print()
-        print(V_frd.shape)
-        print(activated_sum_prev_layer.shape)
-        print()
-        # TODO: add together all timesteps
-        # O_k ~ V_frd, H_k ~ activated_sum_prev_layer
-        V_grad = [np.diag(loss_function.compute_loss_derivative(V_frd[x], target[x])) @ (np.outer(1 - V_frd[x]**2, activated_sum_prev_layer[x])) for x in range(V_frd.shape[0])]
-        V_grad = np.array(V_grad)
-        print(V_grad.shape)
-        sys.exit()
-        ds = diff_s
 
-        dadd = self.activation_func.backward(ds)
+        # TODO: Add shapes
+        U_grad = [np.transpose(U_grad_prev_seq) + np.diag(output_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
+        U_grad = np.transpose(np.sum(U_grad, axis=0))
+        self.U_grads.append(U_grad)
+        print('U_grad', U_grad.shape)
 
-        dmulw, dmulu = self.add_backward(U_frd, W_frd, dadd)
+        neighbor_jacobian = [np.diag(1 - curr_activated_sum[x]**2) @ np.transpose(self.input_weights) for x in range(batch_size)]
+        neighbor_jacobian = np.sum(neighbor_jacobian, axis=0)
 
-        dW, dprev_s = self.multiplication_backward(self.internal_weights, activated_sum_prev_layer, dmulw)
-        dU, dx = self.multiplication_backward(self.input_weights, input, dmulu)
+        print('neighbor_jacobian', neighbor_jacobian.shape)
 
-        # Store gradients weights updates
-        self.dprev_s = dprev_s
+        next_output_jacobian = delta_jacobian @ neighbor_jacobian
 
-        # TODO: store for each sequence
-        self.dU = dU
-        self.dW = dW
+        print(next_output_jacobian.shape)
 
-        # TODO: which values to use for dLo and input? Use dprev_s as diff_s
-        return self.previous_layer.backward_pass(dLo, input, dprev_s)
+        return next_output_jacobian

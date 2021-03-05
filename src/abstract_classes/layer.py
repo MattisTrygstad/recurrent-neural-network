@@ -26,7 +26,7 @@ class Layer(ABC):
         pass
 
     @abstractmethod
-    def backward_pass(self, dLo: np.ndarray, input: np.ndarray, target: np.ndarray, loss_function: LossFunction, output_pred: np.ndarray) -> float:
+    def backward_pass(self, output_jacobian: np.ndarray) -> float:
         """
         1. Compute the initial Jacobian (JSL) representing the derivative of the loss with respect to the network’s (typically softmaxed) outputs.
         2. Pass JSL back through the Softmax layer, modifying it to JNL, which represents the derivative of the loss with respect to the outputs of the layer prior to the softmax, layer N.

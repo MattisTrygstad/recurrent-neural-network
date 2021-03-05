@@ -81,7 +81,7 @@ class RecurrentNetwork:
 
                     diff_s = np.zeros((final_layer.output_shape, 1))
 
-                    final_dprev_s = final_layer.backward_pass(dLo, x_train_batch[seq_index], x_train_batch[seq_index], self.loss_function, activated_sum_seq_array[seq_index])
+                    final_dprev_s = final_layer.backward_pass(dLo)
 
                 # Reset RecurrentLayer class variables for next batch
                 for layer in self.layers:
@@ -90,27 +90,5 @@ class RecurrentNetwork:
                         layer.activated_sum = []
                         layer.U_frd = []
                         layer.W_frd = []
-                        layer.V_frd = []
-
-                """ batch_training_losses.append(round(seq_losses / current_batch_size, 10))
-
-                minibatch_counter += 1
-                print_progress(sample_num, total_training_samples, length=20) """
-
-            """ epoch_training_losses.append(round(epoch_loss / total_training_samples, 10))
-
-            if x_val.any() and y_val.any():
-
-                A, validation_loss = self.predict(x_val, y_val)
-
-                # TODO: Find solution for this issue
-                if Config.loss_function == 0:
-                    validation_loss *= 16
-
-                validation_loss = round(validation_loss / x_val.shape[0], 10)
-                validation_losses_y.append(validation_loss)
-                validation_losses_x.append(minibatch_counter)
-
-                print(f'Epoch: {epoch+1}/{epochs} - Validation loss: {validation_loss} - Training loss: {epoch_training_losses[epoch]}') """
 
         return batch_training_losses, (validation_losses_x, validation_losses_y)
