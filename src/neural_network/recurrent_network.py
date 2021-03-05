@@ -25,8 +25,7 @@ class RecurrentNetwork:
 
         final_layer: Layer = self.layers[-1]
         # TODO: support batch size with A and loss calc using for loop
-        prediction = final_layer.forward_pass(np.transpose(x), add_biases)
-        prediction = np.transpose(prediction)
+        prediction = final_layer.forward_pass(x, add_biases)
         if y is not None:
             losses = self.loss_function.compute_loss(prediction, y)
 

@@ -40,7 +40,7 @@ class DenseLayer(Layer):
         # Multiply the outputs of the previous layer with the weights
         print('weights', self.weights.shape)
         print('prev_layer', activated_sum_prev_layer.shape)
-        weighted_sum: np.ndarray = np.transpose(self.weights) @ activated_sum_prev_layer
+        weighted_sum: np.ndarray = np.transpose(self.weights) @ np.transpose(activated_sum_prev_layer)
         print('sum', weighted_sum.shape)
         # Add biases
         if add_biases:
@@ -50,7 +50,7 @@ class DenseLayer(Layer):
 
         Z = weighted_sum
         # Apply activation function
-        activated_sum = self.activation_func.forward(Z)
+        activated_sum = np.transpose(self.activation_func.forward(Z))
 
         self.activated_sums.append(activated_sum)
         # print(f'dense forward output shape: {A.shape}')
@@ -68,14 +68,13 @@ class DenseLayer(Layer):
         activated_sum_prev_layer = self.activated_sums_prev_layer.pop()
         print('V_grad')
         print(dLo.shape)
-        print(np.transpose(1 - activated_sum**2).shape)
-        print(np.transpose(activated_sum_prev_layer).shape)
+        print((1 - activated_sum**2).shape)
+        print(activated_sum_prev_layer.shape)
 
         print()
         V_grad_prev_seq = 0 if len(self.V_grads) == 0 else self.V_grads[-1]
 
-        V_grad = [V_grad_prev_seq + np.diag(dLo[x]) @ np.outer(np.transpose(1 - activated_sum**2)[x], np.transpose(activated_sum_prev_layer)[x]) for x in range(batch_size)]
-        V_grad = np.array(np.transpose(V_grad, (0, 2, 1)))
+        V_grad = [V_grad_prev_seq + np.diag(dLo[x]) @ np.outer((1 - activated_sum**2)[x], activated_sum_prev_layer[x]) for x in range(batch_size)]
 
         print(V_grad.shape)
         self.V_grads.append(V_grad)

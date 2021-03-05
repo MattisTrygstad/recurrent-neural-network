@@ -53,7 +53,7 @@ class RecurrentLayer(Layer):
 
         print(self.input_weights.shape)
         print(activated_sum_prev_layer.shape)
-        U_frd: np.ndarray = np.transpose(self.input_weights) @ activated_sum_prev_layer
+        U_frd: np.ndarray = np.transpose(self.input_weights) @ np.transpose(activated_sum_prev_layer)
 
         print(U_frd.shape)
 
@@ -66,7 +66,7 @@ class RecurrentLayer(Layer):
             temp_sum += new_biases
 
         # Apply activation function
-        activated_sum = self.activation_func.forward(temp_sum)
+        activated_sum = np.transpose(self.activation_func.forward(temp_sum))
 
         #V_frd = self.output_weights @ activated_sum
 
