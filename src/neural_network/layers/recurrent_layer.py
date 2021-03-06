@@ -27,14 +27,9 @@ class RecurrentLayer(Layer):
         self.W_grads = []
         self.U_grads = []
 
-        # Gradient ~ dU
+        # Layer weights
         self.input_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
-
-        # Gradient ~ dW
         self.internal_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.output_shape, self.output_shape))
-
-        # Gradient ~ dV
-        self.output_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
 
         if name:
             self.name = name
@@ -42,7 +37,7 @@ class RecurrentLayer(Layer):
             self.name = f'recurrent{self.input_shape}'
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
-        print('recurrent forward')
+        # print('recurrent forward')
         # Send each case through the network from input to output
         activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
         activated_sum_prev_seq = np.zeros((1, self.output_shape)) if len(self.activated_sums) == 0 else self.activated_sums[-1]
@@ -68,7 +63,7 @@ class RecurrentLayer(Layer):
         return activated_sum
 
     def backward_pass(self, output_jacobian: np.ndarray) -> float:
-        print('\nbackprop recurrent')
+        # print('\nbackprop recurrent')
 
         activated_sum_prev_layer = self.activated_sums_prev_layer.pop()
 
@@ -88,40 +83,44 @@ class RecurrentLayer(Layer):
             U_grad_prev_seq = self.U_grads[-1]
 
             # Delta jacobian params
+            # H_k+1
             next_activated_sum = self.activated_sums.pop()
             delta_jacobian_prev_seq = self.delta_jacobians[-1]
 
             recurrent_jacobian = [np.diag((1 - next_activated_sum[x]**2)) @ np.transpose(self.internal_weights) for x in range(batch_size)]
             recurrent_jacobian = np.sum(recurrent_jacobian, axis=0)
-            delta_jacobian = output_jacobian + delta_jacobian_prev_seq @ recurrent_jacobian
 
-        curr_activated_sum = self.activated_sums[-1]
-        prev_activated_sum = np.zeros_like(output_jacobian) if len(self.activated_sums) == 1 else self.activated_sums[-2]
+            delta_jacobian = output_jacobian + delta_jacobian_prev_seq @ recurrent_jacobian
 
         self.delta_jacobians.append(delta_jacobian)
 
-        print('delta_jacobian', delta_jacobian.shape)
+        # H_k
+        curr_activated_sum = self.activated_sums[-1]
+        # H_k-1
+        prev_activated_sum = np.zeros_like(output_jacobian) if len(self.activated_sums) == 1 else self.activated_sums[-2]
+
+        # print('delta_jacobian', delta_jacobian.shape)
 
         # Shapes: W_grad = W_grad_prev_seq = (recurrent_size, recurrent_size), output_jacobian = (batch_size, bit_vector_size), curr_activated_sum = prev_activated_sum = (batch_size, recurrent_size)
         W_grad = [np.transpose(W_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
         W_grad = np.transpose(np.sum(W_grad, axis=0))
         self.W_grads.append(W_grad)
 
-        print('W_grad', W_grad.shape)
+        # print('W_grad', W_grad.shape)
 
         # TODO: Add shapes
         U_grad = [np.transpose(U_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
         U_grad = np.transpose(np.sum(U_grad, axis=0))
         self.U_grads.append(U_grad)
-        print('U_grad', U_grad.shape)
+        # print('U_grad', U_grad.shape)
 
         neighbor_jacobian = [np.diag(1 - curr_activated_sum[x]**2) @ np.transpose(self.input_weights) for x in range(batch_size)]
         neighbor_jacobian = np.sum(neighbor_jacobian, axis=0)
 
-        print('neighbor_jacobian', neighbor_jacobian.shape)
+        # print('neighbor_jacobian', neighbor_jacobian.shape)
 
         next_output_jacobian = delta_jacobian @ neighbor_jacobian
 
-        print('next_output_jacobian', next_output_jacobian.shape)
+        # print('next_output_jacobian', next_output_jacobian.shape)
 
         return next_output_jacobian

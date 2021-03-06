@@ -28,10 +28,6 @@ def main():
     x_train, y_train, training_rules = load_dataset(DatasetType.TRAINING)
     x_val, y_val, validation_rules = load_dataset(DatasetType.VALIDATION)
 
-    print(x_train[0][1])
-    print(y_train[0][1])
-    print(training_rules[0])
-
     if Config.train_network:
         # Load network configuration
         layer_neurons = Config.layer_neurons

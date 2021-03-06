@@ -51,7 +51,9 @@ class RecurrentNetwork:
             epoch_loss = 0
 
             total_training_samples = x_train.shape[0]
+            batch_counter = 0
             for sample_num in range(0, total_training_samples, batch_size):
+                batch_counter += 1
                 remaining_samples = total_training_samples - sample_num
                 current_batch_size = min(remaining_samples, batch_size)
 
@@ -62,7 +64,6 @@ class RecurrentNetwork:
                 seq_length = x_train_batch.shape[0]
                 activated_sum_seq_array = []
 
-                # shape: (seq_length, batch_size)
                 seq_losses = []
                 for seq_index in range(seq_length):
                     # Make prediction using forward propagation
@@ -71,19 +72,25 @@ class RecurrentNetwork:
                     activated_sum_seq_array.append(prediction)
                     seq_losses.append(batch_losses)
 
+                batch_loss = np.mean(np.array(seq_losses))
+                epoch_loss += batch_loss
+
                 dLo_seq_array = []
                 for seq_index in range(seq_length - 1, -1, -1):
-                    # Adjust weights and biases using backward propagation
-
+                    # Loss derivative
                     dLo = self.loss_function.compute_loss_derivative(activated_sum_seq_array[seq_index], y_train_batch[seq_index])
-
                     dLo_seq_array.append(dLo)
 
+                    # Backpropagation through the network
                     output_jacobian = final_layer.backward_pass(dLo)
 
-                # Reset RecurrentLayer class variables for next batch
                 for layer in self.layers:
                     if isinstance(layer, RecurrentLayer):
+                        # Update weights
+                        layer.input_weights -= layer.learning_rate * layer.U_grads[-1]
+                        layer.internal_weights -= layer.learning_rate * layer.W_grads[-1]
+
+                        # Reset RecurrentLayer class variables for next batch
                         layer.activated_sums_prev_layer = []
                         layer.activated_sums = []
                         layer.U_grads = []
@@ -91,8 +98,15 @@ class RecurrentNetwork:
                         layer.delta_jacobians = []
 
                     if isinstance(layer, DenseLayer):
-                        self.activated_sums = []
-                        self.activated_sums_prev_layer = []
-                        self.V_grads = []
+                        # Update weights
+                        # print(layer.weights)
+                        layer.weights -= layer.learning_rate * layer.V_grads[-1]
+
+                        # Reset DenseLayer class variables for next batch
+                        layer.activated_sums = []
+                        layer.activated_sums_prev_layer = []
+                        layer.V_grads = []
+
+            print(round(epoch_loss / batch_counter, 10))
 
         return batch_training_losses, (validation_losses_x, validation_losses_y)

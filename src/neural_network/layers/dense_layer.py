@@ -26,9 +26,6 @@ class DenseLayer(Layer):
         # Backward prop params
         self.V_grads = []
 
-        # Stored forward prop output for current layer, used in back prop
-        self.Z = None
-
         if name:
             self.name = name
         else:
@@ -48,38 +45,39 @@ class DenseLayer(Layer):
             new_biases = np.repeat(self.biases, repeats, axis=-1)
             weighted_sum += new_biases
 
-        Z = weighted_sum
         # Apply activation function
-        activated_sum = np.transpose(self.activation_func.forward(Z))
+        activated_sum = np.transpose(self.activation_func.forward(weighted_sum))
 
         self.activated_sums.append(activated_sum)
 
         return activated_sum
 
     def backward_pass(self, output_jacobian: np.ndarray) -> float:
-        print('backprop output layer')
-        activated_sum = self.activated_sums.pop()
-        batch_size = output_jacobian.shape[0]
+        # print('backprop output layer')
 
+        # O_k
+        activated_sum = self.activated_sums.pop()
+        # H_k
         activated_sum_prev_layer = self.activated_sums_prev_layer.pop()
+
+        batch_size = output_jacobian.shape[0]
 
         V_grad_prev_seq = np.zeros_like(self.weights) if len(self.V_grads) == 0 else self.V_grads[-1]
 
         # TODO: Comment shapes
         V_grad = [np.transpose(V_grad_prev_seq) + np.diag(output_jacobian[x]) @ np.outer((1 - activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
         V_grad = np.transpose(np.sum(V_grad, axis=0))
-
         self.V_grads.append(V_grad)
-        print('V_grad', V_grad.shape)
+        # print('V_grad', V_grad.shape)
 
         neighbor_jacobian = [np.diag(1 - activated_sum[x]**2) @ np.transpose(self.weights) for x in range(batch_size)]
         neighbor_jacobian = np.sum(neighbor_jacobian, axis=0)
 
-        print('output_jacobian', output_jacobian.shape)
-        print('neighbor_jacobian', neighbor_jacobian.shape)
+        # print('output_jacobian', output_jacobian.shape)
+        # print('neighbor_jacobian', neighbor_jacobian.shape)
 
         next_output_jacobian = output_jacobian @ neighbor_jacobian
 
-        print('return next_output_jacobian', next_output_jacobian.shape)
+        # print('return next_output_jacobian', next_output_jacobian.shape)
 
         return self.previous_layer.backward_pass(next_output_jacobian)
