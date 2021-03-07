@@ -62,7 +62,7 @@ def main():
 
         training_losses, validation_losses_tuple = network.fit(x_train, y_train, x_val, y_val, Config.epochs, Config.batch_size)
 
-        #visualize_loss(training_losses, validation_losses_tuple)
+        visualize_loss(training_losses, validation_losses_tuple)
 
 
 if __name__ == "__main__":

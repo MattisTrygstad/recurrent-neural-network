@@ -37,6 +37,29 @@ class RecurrentNetwork:
         else:
             return prediction, None
 
+    def reset_memory(self):
+        for layer in self.layers:
+            if isinstance(layer, RecurrentLayer):
+                layer.activated_sums_prev_layer = []
+                layer.activated_sums = []
+                layer.U_grads = []
+                layer.W_grads = []
+                layer.delta_jacobians = []
+
+            if isinstance(layer, DenseLayer):
+                layer.activated_sums = []
+                layer.activated_sums_prev_layer = []
+                layer.V_grads = []
+
+    def update_weights(self):
+        for layer in self.layers:
+            if isinstance(layer, RecurrentLayer):
+                layer.input_weights -= layer.learning_rate * layer.U_grads[-1]
+                layer.internal_weights -= layer.learning_rate * layer.W_grads[-1]
+
+            if isinstance(layer, DenseLayer):
+                layer.weights -= layer.learning_rate * layer.V_grads[-1]
+
     def fit(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, epochs: int, batch_size: int = 64) -> tuple:
 
         final_layer: Layer = self.layers[-1]
@@ -51,9 +74,8 @@ class RecurrentNetwork:
             epoch_loss = 0
 
             total_training_samples = x_train.shape[0]
-            batch_counter = 0
             for sample_num in range(0, total_training_samples, batch_size):
-                batch_counter += 1
+                minibatch_counter += 1
                 remaining_samples = total_training_samples - sample_num
                 current_batch_size = min(remaining_samples, batch_size)
 
@@ -72,8 +94,9 @@ class RecurrentNetwork:
                     activated_sum_seq_array.append(prediction)
                     seq_losses.append(batch_losses)
 
-                batch_loss = np.mean(np.array(seq_losses))
-                epoch_loss += batch_loss
+                avg_loss = np.mean(np.array(seq_losses))
+                epoch_loss += avg_loss
+                batch_training_losses.append(avg_loss)
 
                 dLo_seq_array = []
                 for seq_index in range(seq_length - 1, -1, -1):
@@ -84,29 +107,41 @@ class RecurrentNetwork:
                     # Backpropagation through the network
                     output_jacobian = final_layer.backward_pass(dLo)
 
-                for layer in self.layers:
-                    if isinstance(layer, RecurrentLayer):
-                        # Update weights
-                        layer.input_weights -= layer.learning_rate * layer.U_grads[-1]
-                        layer.internal_weights -= layer.learning_rate * layer.W_grads[-1]
+                self.update_weights()
+                self.reset_memory()
 
-                        # Reset RecurrentLayer class variables for next batch
-                        layer.activated_sums_prev_layer = []
-                        layer.activated_sums = []
-                        layer.U_grads = []
-                        layer.W_grads = []
-                        layer.delta_jacobians = []
+                print_progress(sample_num, total_training_samples, length=20)
 
-                    if isinstance(layer, DenseLayer):
-                        # Update weights
-                        # print(layer.weights)
-                        layer.weights -= layer.learning_rate * layer.V_grads[-1]
+            epoch_training_losses.append(round(epoch_loss / total_training_samples, 10))
 
-                        # Reset DenseLayer class variables for next batch
-                        layer.activated_sums = []
-                        layer.activated_sums_prev_layer = []
-                        layer.V_grads = []
+            if x_val.any() and y_val.any():
+                total_validation_samples = x_val.shape[0]
+                val_batch_loss = 0
 
-            print(round(epoch_loss / batch_counter, 10))
+                counter = 0
+                for sample_num in range(0, total_validation_samples, batch_size):
+                    counter += 1
+
+                    remaining_samples = total_validation_samples - sample_num
+                    current_batch_size = min(remaining_samples, batch_size)
+
+                    x_val_batch = np.transpose(x_val[sample_num:sample_num + current_batch_size], (1, 0, 2))
+                    y_val_batch = np.transpose(y_val[sample_num:sample_num + current_batch_size], (1, 0, 2))
+
+                    seq_losses = []
+                    for seq_index in range(seq_length):
+                        # Make prediction using forward propagation
+                        prediction, val_loss = self.predict(x_val_batch[seq_index], y_val_batch[seq_index])
+
+                        seq_losses.append(val_loss)
+
+                    val_batch_loss += np.mean(np.array(seq_losses))
+                    self.reset_memory()
+
+                total_val_loss = round(val_batch_loss / counter, 10)
+                validation_losses_y.append(total_val_loss)
+                validation_losses_x.append(minibatch_counter)
+
+                print(f'Epoch: {epoch+1}/{epochs} - Validation loss: {total_val_loss} - Training loss: {epoch_training_losses[epoch]}')
 
         return batch_training_losses, (validation_losses_x, validation_losses_y)
