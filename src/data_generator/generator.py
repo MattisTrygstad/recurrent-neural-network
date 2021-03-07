@@ -49,10 +49,10 @@ class Generator():
 
     @staticmethod
     def __generate_vector(vector_length: int, probability: float) -> np.ndarray:
-        vector = np.zeros((vector_length,))
-        while np.all(vector == vector[0]):
-            vector = np.random.choice([0, 1], size=(vector_length,), p=[1 - probability, probability])
-
+        vector = np.zeros(vector_length)
+        ones = int(round(vector_length * probability))
+        vector[:ones] = 1
+        # np.random.shuffle(vector)
         return vector
 
     @staticmethod

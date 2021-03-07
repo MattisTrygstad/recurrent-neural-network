@@ -1,23 +1,13 @@
-
-import random
-import sys
-from matplotlib import pyplot as plt
 import numpy as np
 from data_generator.generator import Generator
 from enums import DatasetType
-from neural_network.activation_functions.relu import Relu
-from neural_network.activation_functions.sigmoid import Sigmoid
-from neural_network.activation_functions.softmax import Softmax
 from neural_network.layers.dense_layer import DenseLayer
 from neural_network.layers.input_layer import InputLayer
 from neural_network.layers.recurrent_layer import RecurrentLayer
-from neural_network.loss_functions.cross_entropy import CrossEntropy
-from neural_network.loss_functions.mean_squared_error import MeanSquaredError
 from neural_network.recurrent_network import RecurrentNetwork
 from utils.config_parser import Config
-from utils.instantiate import instantiate_activation, instantiate_loss, instantiate_regularizer
+from utils.instantiate import instantiate_activation, instantiate_loss
 from utils.load_dataset import load_dataset
-from utils.visualize_image import visualize_image
 from utils.visualize_loss import visualize_loss
 
 
@@ -27,6 +17,7 @@ def main():
 
     x_train, y_train, training_rules = load_dataset(DatasetType.TRAINING)
     x_val, y_val, validation_rules = load_dataset(DatasetType.VALIDATION)
+    x_test, y_test, test_rules = load_dataset(DatasetType.TEST)
 
     if Config.train_network:
         # Load network configuration
@@ -63,6 +54,23 @@ def main():
         training_losses, validation_losses_tuple = network.fit(x_train, y_train, x_val, y_val, Config.epochs, Config.batch_size)
 
         visualize_loss(training_losses, validation_losses_tuple)
+
+        # Test trained model
+        x_test = np.transpose(x_test, (1, 0, 2))
+        y_test = np.transpose(y_test, (1, 0, 2))
+
+        for x in range(5):
+            x_test_sample = x_test[:, x, :]
+            y_test_sample = y_test[:, x, :]
+            test_sample_rule = test_rules[x]
+
+            prediction, loss = network.predict(x_test_sample, y_test_sample)
+
+            # for vector in prediction:
+            prediction = np.around(prediction).astype(int)
+            print(f'Prediction:\t{prediction[-1]}')
+            print(f'Target:\t\t{y_test_sample[-1]}')
+            print(test_sample_rule)
 
 
 if __name__ == "__main__":
