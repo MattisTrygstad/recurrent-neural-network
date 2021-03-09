@@ -29,7 +29,7 @@ class DenseLayer(Layer):
         if name:
             self.name = name
         else:
-            self.name = f'dense{self.input_shape}'
+            self.name = f'dense{self.output_shape}'
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
         # Send each case through the network from input to output

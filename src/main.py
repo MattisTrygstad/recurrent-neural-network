@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from data_generator.generator import Generator
 from enums import DatasetType
@@ -56,24 +57,30 @@ def main():
         visualize_loss(training_losses, validation_losses_tuple)
         test_samples = x_test.shape[0]
         # Test trained model
-        x_test = np.transpose(x_test, (1, 0, 2))
-        y_test = np.transpose(y_test, (1, 0, 2))
+
+        network.reset_memory()
 
         correct_predictions = 0
         for x in range(test_samples):
-            x_test_sample = x_test[:, x, :]
-            y_test_sample = y_test[:, x, :]
+            x_test_sample = np.transpose(x_train[x:x + 1], (1, 0, 2))
+            y_test_sample = np.transpose(y_train[x:x + 1], (1, 0, 2))
+
             test_sample_rule = test_rules[x]
 
-            prediction, loss = network.predict(x_test_sample, y_test_sample)
+            predictions = []
+            for seq_index in range(x_test_sample.shape[0]):
+                pred, _ = network.predict(x_test_sample[seq_index])
+                predictions.append(pred)
 
             # for vector in prediction:
-            prediction = np.around(prediction).astype(int)
-            print(f'Prediction:\t{prediction[-1]}')
-            print(f'Target:\t\t{y_test_sample[-1]}')
+            prediction = np.around(predictions[-1]).astype(int)
+            print(f'Prediction:\t{prediction[0]}')
+            print(f'Target:\t\t{y_test_sample[-1][0]}')
             print(test_sample_rule)
 
-            correct_predictions += 1 if np.array_equal(prediction[-1], y_test_sample[-1]) else 0
+            correct_predictions += 1 if np.array_equal(prediction[0], y_test_sample[-1][0]) else 0
+
+            network.reset_memory()
 
         print(f'Correct predictions (last sequence): {correct_predictions}/{test_samples} = {round(correct_predictions/test_samples*100, 2)}%')
 

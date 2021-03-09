@@ -34,9 +34,10 @@ class RecurrentLayer(Layer):
         if name:
             self.name = name
         else:
-            self.name = f'recurrent{self.input_shape}'
+            self.name = f'recurrent{self.output_shape}'
 
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:
+        # print(f'forward  {self.name}')
         # print('recurrent forward')
         # Send each case through the network from input to output
         activated_sum_prev_layer = self.previous_layer.forward_pass(input, add_biases)
@@ -63,7 +64,7 @@ class RecurrentLayer(Layer):
         return activated_sum
 
     def backward_pass(self, output_jacobian: np.ndarray) -> float:
-        # print('\nbackprop recurrent')
+        # print(f'backward  {self.name}')
 
         activated_sum_prev_layer = self.activated_sums_prev_layer.pop()
 
@@ -123,4 +124,4 @@ class RecurrentLayer(Layer):
 
         # print('next_output_jacobian', next_output_jacobian.shape)
 
-        return next_output_jacobian
+        return self.previous_layer.backward_pass(next_output_jacobian)
