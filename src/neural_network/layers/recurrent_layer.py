@@ -103,15 +103,15 @@ class RecurrentLayer(Layer):
         # print('delta_jacobian', delta_jacobian.shape)
 
         # Shapes: W_grad = W_grad_prev_seq = (recurrent_size, recurrent_size), output_jacobian = (batch_size, bit_vector_size), curr_activated_sum = prev_activated_sum = (batch_size, recurrent_size)
-        W_grad = [np.transpose(W_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
-        W_grad = np.transpose(np.sum(W_grad, axis=0))
+        W_grad = [np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
+        W_grad = np.transpose(np.transpose(W_grad_prev_seq) + np.sum(W_grad, axis=0))
         self.W_grads.append(W_grad)
 
         # print('W_grad', W_grad.shape)
 
         # TODO: Add shapes
-        U_grad = [np.transpose(U_grad_prev_seq) + np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
-        U_grad = np.transpose(np.sum(U_grad, axis=0))
+        U_grad = [np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
+        U_grad = np.transpose(np.transpose(U_grad_prev_seq) + np.sum(U_grad, axis=0))
         self.U_grads.append(U_grad)
         # print('U_grad', U_grad.shape)
 

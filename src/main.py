@@ -57,6 +57,7 @@ def main():
         # Test trained model
         test_samples = x_test.shape[0]
         correct_predictions = 0
+
         for x in range(test_samples):
             x_test_sample = np.transpose(x_test[x:x + 1], (1, 0, 2))
             y_test_sample = np.transpose(y_test[x:x + 1], (1, 0, 2))
@@ -76,7 +77,6 @@ def main():
             print()
 
             correct_predictions += 1 if np.array_equal(prediction[0], y_test_sample[-1][0]) else 0
-
             network.reset_memory()
 
         accuracy = round(correct_predictions / test_samples * 100, 2)

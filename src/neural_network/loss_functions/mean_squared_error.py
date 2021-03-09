@@ -17,7 +17,7 @@ class MeanSquaredError(LossFunction):
             loss = np.mean((np.square(prediction[batch_index] - target[batch_index])))
             losses.append(loss / vector_size)
 
-        losses = np.sum(np.array(losses))
+        losses = np.mean(np.array(losses))
         return losses
 
     @ staticmethod
