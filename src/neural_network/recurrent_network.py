@@ -82,7 +82,6 @@ class RecurrentNetwork:
                 x_train_batch = np.transpose(x_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
                 y_train_batch = np.transpose(y_train[sample_num:sample_num + current_batch_size], (1, 0, 2))
 
-                # Iterate through sequence length
                 seq_length = x_train_batch.shape[0]
                 activated_sum_seq_array = []
 

@@ -54,10 +54,8 @@ def main():
 
         training_losses, validation_losses_tuple = network.fit(x_train, y_train, x_val, y_val, Config.epochs, Config.batch_size)
 
-        visualize_loss(training_losses, validation_losses_tuple)
-        test_samples = x_test.shape[0]
         # Test trained model
-
+        test_samples = x_test.shape[0]
         correct_predictions = 0
         for x in range(test_samples):
             x_test_sample = np.transpose(x_test[x:x + 1], (1, 0, 2))
@@ -75,12 +73,16 @@ def main():
             print(f'Prediction:\t{prediction[0]}')
             print(f'Target:\t\t{y_test_sample[-1][0]}')
             print(test_sample_rule)
+            print()
 
             correct_predictions += 1 if np.array_equal(prediction[0], y_test_sample[-1][0]) else 0
 
             network.reset_memory()
 
-        print(f'Correct predictions (last sequence): {correct_predictions}/{test_samples} = {round(correct_predictions/test_samples*100, 2)}%')
+        accuracy = round(correct_predictions / test_samples * 100, 2)
+        print(f'Correct predictions (last sequence): {correct_predictions}/{test_samples} = {accuracy}%')
+
+        visualize_loss(training_losses, validation_losses_tuple, accuracy)
 
 
 if __name__ == "__main__":

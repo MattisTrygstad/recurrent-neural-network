@@ -27,17 +27,6 @@ def instantiate_activation(num: int) -> ActivationFunction:
         raise Exception('Invalid activation function')
 
 
-def instantiate_regularizer(num: int, rate: float) -> Regularizer:
-    if num == 0:
-        return None
-    elif num == 1:
-        return L1(rate)
-    elif num == 2:
-        return L2(rate)
-    else:
-        raise Exception('Invalid regularizer')
-
-
 def instantiate_loss(num: int) -> LossFunction:
     if num == 0:
         return MeanSquaredError
