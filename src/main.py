@@ -58,12 +58,10 @@ def main():
         test_samples = x_test.shape[0]
         # Test trained model
 
-        network.reset_memory()
-
         correct_predictions = 0
         for x in range(test_samples):
-            x_test_sample = np.transpose(x_train[x:x + 1], (1, 0, 2))
-            y_test_sample = np.transpose(y_train[x:x + 1], (1, 0, 2))
+            x_test_sample = np.transpose(x_test[x:x + 1], (1, 0, 2))
+            y_test_sample = np.transpose(y_test[x:x + 1], (1, 0, 2))
 
             test_sample_rule = test_rules[x]
 
