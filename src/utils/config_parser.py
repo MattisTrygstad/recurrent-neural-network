@@ -35,3 +35,4 @@ class Config:
     sequence_length = int(ast.literal_eval(config.get('DATA_GENERATION', 'sequence_length')))
     vector_length = int(ast.literal_eval(config.get('DATA_GENERATION', 'vector_length')))
     bit_probability = float(ast.literal_eval(config.get('DATA_GENERATION', 'bit_probability')))
+    shuffle_pattern = bool(ast.literal_eval(config.get('DATA_GENERATION', 'shuffle_pattern')))

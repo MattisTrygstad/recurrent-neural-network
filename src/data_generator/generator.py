@@ -52,7 +52,8 @@ class Generator():
         vector = np.zeros(vector_length)
         ones = int(round(vector_length * probability))
         vector[:ones] = 1
-        # np.random.shuffle(vector)
+        if Config.shuffle_pattern:
+            np.random.shuffle(vector)
         return vector
 
     @staticmethod

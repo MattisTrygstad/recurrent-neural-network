@@ -94,9 +94,8 @@ class RecurrentNetwork:
                     activated_sum_seq_array.append(prediction)
                     seq_losses.append(batch_losses)
 
-                avg_loss = np.mean(np.array(seq_losses))
-                epoch_loss += avg_loss
-                batch_training_losses.append(avg_loss)
+                epoch_loss += seq_losses[-1]
+                batch_training_losses.append(seq_losses[-1])
 
                 dLo_seq_array = []
                 for seq_index in range(seq_length - 1, -1, -1):
@@ -135,7 +134,7 @@ class RecurrentNetwork:
 
                         seq_losses.append(val_loss)
 
-                    val_batch_loss += np.mean(np.array(seq_losses))
+                    val_batch_loss += seq_losses[-1]
                     self.reset_memory()
 
                 total_val_loss = round(val_batch_loss / counter, 10)
