@@ -25,13 +25,14 @@ class RecurrentNetwork:
         # TODO: support batch size with A and loss calc using for loop
         prediction = final_layer.forward_pass(x, add_biases)
         if y is not None:
-            losses = self.loss_function.compute_loss(prediction, y)
+            loss = self.loss_function.compute_loss(prediction, y)
 
             if Config.verbose_mode:
-                print(x)
-                print(prediction)
-                print(losses)
-            return prediction, losses
+                print(f'Network input:\n{x}')
+                print(f'Prediction:\n{prediction}')
+                print(f'Target:\n{y}')
+                print(f'Loss:\n{loss}')
+            return prediction, loss
         else:
             return prediction, None
 

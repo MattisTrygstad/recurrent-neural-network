@@ -12,6 +12,7 @@ class Config:
     train_network = bool(ast.literal_eval(config.get('GLOBAL', 'train_network')))
     display_images = int(ast.literal_eval(config.get('GLOBAL', 'display_images')))
     verbose_mode = bool(ast.literal_eval(config.get('GLOBAL', 'verbose_mode')))
+    recurrence = bool(ast.literal_eval(config.get('GLOBAL', 'recurrence')))
     dataset_name = str(ast.literal_eval(config.get('GLOBAL', 'dataset_name')))
 
     # NETWORK
@@ -34,5 +35,5 @@ class Config:
     shifting_rules = list(ast.literal_eval(config.get('DATA_GENERATION', 'shifting_rules')))
     sequence_length = int(ast.literal_eval(config.get('DATA_GENERATION', 'sequence_length')))
     vector_length = int(ast.literal_eval(config.get('DATA_GENERATION', 'vector_length')))
-    bit_probability = float(ast.literal_eval(config.get('DATA_GENERATION', 'bit_probability')))
+    bit_ratio = float(ast.literal_eval(config.get('DATA_GENERATION', 'bit_ratio')))
     shuffle_pattern = bool(ast.literal_eval(config.get('DATA_GENERATION', 'shuffle_pattern')))

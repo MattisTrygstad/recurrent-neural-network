@@ -1,6 +1,7 @@
 import numpy as np
 from abstract_classes.activation_function import ActivationFunction
 from abstract_classes.layer import Layer
+from utils.config_parser import Config
 
 
 class RecurrentLayer(Layer):
@@ -62,7 +63,7 @@ class RecurrentLayer(Layer):
         batch_size = output_jacobian.shape[0]
 
         # First sequence in backprop
-        if not hasattr(self, 'delta_jacobian_cumulative'):
+        if not hasattr(self, 'delta_jacobian_cumulative') or not Config.recurrence:
             # Weigh grad params
             W_grad_prev_seq = np.zeros_like(self.internal_weights)
             U_grad_prev_seq = np.zeros_like(self.input_weights)

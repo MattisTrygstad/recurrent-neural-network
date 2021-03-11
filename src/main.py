@@ -13,7 +13,7 @@ from utils.visualize_loss import visualize_loss
 
 def main():
     if Config.generate_data:
-        Generator.generate_dataset(Config.shifting_rules, Config.vector_length, Config.sequence_length, Config.dataset_size, Config.bit_probability, Config.split_ratios)
+        Generator.generate_dataset(Config.shifting_rules, Config.vector_length, Config.sequence_length, Config.dataset_size, Config.bit_ratio, Config.split_ratios)
 
     x_train, y_train, training_rules = load_dataset(DatasetType.TRAINING)
     x_val, y_val, validation_rules = load_dataset(DatasetType.VALIDATION)
