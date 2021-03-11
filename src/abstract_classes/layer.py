@@ -2,17 +2,24 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-
-from abstract_classes.loss_function import LossFunction
+from abstract_classes.activation_function import ActivationFunction
 
 
 class Layer(ABC):
     """
-    Abstract class for Neural Network layers
+    Superclass for Neural Network layers
     """
 
     def __init__(self, output_shape: int) -> None:
         self.output_shape = output_shape
+
+    def compute_weight_gradient(self, jacobian: np.ndarray, activation_func: ActivationFunction, a1: np.ndarray, a2: np.ndarray, batch_size: int, grad_prev_seq: np.ndarray) -> np.ndarray:
+        grad = [np.diag(jacobian[x]) @ np.outer(activation_func.backward(a1[x]), a2[x]) for x in range(batch_size)]
+        return np.transpose(np.transpose(grad_prev_seq) + np.sum(grad, axis=0))
+
+    def compute_neighbor_jacobian(self, activation_func: ActivationFunction, a: np.ndarray, weights: np.ndarray, batch_size: int) -> np.ndarray:
+        neighbor_jacobian = [np.diag(activation_func.backward(a[x])) @ np.transpose(weights) for x in range(batch_size)]
+        return np.sum(neighbor_jacobian, axis=0)
 
     @abstractmethod
     def forward_pass(self, input: np.ndarray, add_biases: bool) -> np.ndarray:

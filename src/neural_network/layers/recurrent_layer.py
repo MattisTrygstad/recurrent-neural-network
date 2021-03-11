@@ -1,10 +1,6 @@
-import sys
 import numpy as np
 from abstract_classes.activation_function import ActivationFunction
 from abstract_classes.layer import Layer
-from abstract_classes.loss_function import LossFunction
-from abstract_classes.regularizer import Regularizer
-from utils.config_parser import Config
 
 
 class RecurrentLayer(Layer):
@@ -21,11 +17,6 @@ class RecurrentLayer(Layer):
         # Parameter calculated during forward prop, used in back prop.
         self.activated_sums_prev_layer = []
         self.activated_sums = []
-
-        # Backprop parameters
-        self.delta_jacobians = []
-        self.W_grads = []
-        self.U_grads = []
 
         # Layer weights
         self.input_weights = np.random.uniform(low=init_weight_range[0], high=init_weight_range[1], size=(self.input_shape, self.output_shape))
@@ -71,7 +62,7 @@ class RecurrentLayer(Layer):
         batch_size = output_jacobian.shape[0]
 
         # First sequence in backprop
-        if len(self.delta_jacobians) == 0:
+        if not hasattr(self, 'delta_jacobian_cumulative'):
             # Weigh grad params
             W_grad_prev_seq = np.zeros_like(self.internal_weights)
             U_grad_prev_seq = np.zeros_like(self.input_weights)
@@ -80,20 +71,20 @@ class RecurrentLayer(Layer):
             delta_jacobian = output_jacobian
         else:
             # Weight grad params
-            W_grad_prev_seq = self.W_grads[-1]
-            U_grad_prev_seq = self.U_grads[-1]
+            W_grad_prev_seq = self.W_grad_cumulative
+            U_grad_prev_seq = self.U_grad_cumulative
 
             # Delta jacobian params
             # H_k+1
             next_activated_sum = self.activated_sums.pop()
-            delta_jacobian_prev_seq = self.delta_jacobians[-1]
+            delta_jacobian_prev_seq = self.delta_jacobian_cumulative
 
-            recurrent_jacobian = [np.diag((1 - next_activated_sum[x]**2)) @ np.transpose(self.internal_weights) for x in range(batch_size)]
+            recurrent_jacobian = [np.diag(self.activation_func.backward(next_activated_sum[x])) @ np.transpose(self.internal_weights) for x in range(batch_size)]
             recurrent_jacobian = np.sum(recurrent_jacobian, axis=0)
 
             delta_jacobian = output_jacobian + delta_jacobian_prev_seq @ recurrent_jacobian
 
-        self.delta_jacobians.append(delta_jacobian)
+        self.delta_jacobian_cumulative = delta_jacobian
 
         # H_k
         curr_activated_sum = self.activated_sums[-1]
@@ -103,20 +94,15 @@ class RecurrentLayer(Layer):
         # print('delta_jacobian', delta_jacobian.shape)
 
         # Shapes: W_grad = W_grad_prev_seq = (recurrent_size, recurrent_size), output_jacobian = (batch_size, bit_vector_size), curr_activated_sum = prev_activated_sum = (batch_size, recurrent_size)
-        W_grad = [np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), prev_activated_sum[x]) for x in range(batch_size)]
-        W_grad = np.transpose(np.transpose(W_grad_prev_seq) + np.sum(W_grad, axis=0))
-        self.W_grads.append(W_grad)
+        self.W_grad_cumulative = self.compute_weight_gradient(delta_jacobian, self.activation_func, curr_activated_sum, prev_activated_sum, batch_size, W_grad_prev_seq)
 
         # print('W_grad', W_grad.shape)
 
         # TODO: Add shapes
-        U_grad = [np.diag(delta_jacobian[x]) @ np.outer((1 - curr_activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
-        U_grad = np.transpose(np.transpose(U_grad_prev_seq) + np.sum(U_grad, axis=0))
-        self.U_grads.append(U_grad)
+        self.U_grad_cumulative = self.compute_weight_gradient(delta_jacobian, self.activation_func, curr_activated_sum, activated_sum_prev_layer, batch_size, U_grad_prev_seq)
         # print('U_grad', U_grad.shape)
 
-        neighbor_jacobian = [np.diag(1 - curr_activated_sum[x]**2) @ np.transpose(self.input_weights) for x in range(batch_size)]
-        neighbor_jacobian = np.sum(neighbor_jacobian, axis=0)
+        neighbor_jacobian = self.compute_neighbor_jacobian(self.activation_func, curr_activated_sum, self.input_weights, batch_size)
 
         # print('neighbor_jacobian', neighbor_jacobian.shape)
 

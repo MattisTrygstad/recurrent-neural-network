@@ -10,6 +10,6 @@ def visualize_loss(training_losses: list, validation_losses: tuple, accuracy: fl
     plt.ylabel('Loss')
     plt.legend(loc="upper right")
 
-    text = f"Test data accuracy (last sequence): {accuracy}%"
+    text = f"Test data accuracy (final timestep): {accuracy}%"
     plt.title(text)
     plt.show()

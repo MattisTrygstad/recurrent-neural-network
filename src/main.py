@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from data_generator.generator import Generator
 from enums import DatasetType
@@ -70,7 +69,7 @@ def main():
                 predictions.append(pred)
 
             # for vector in prediction:
-            prediction = np.around(predictions[-1]).astype(int)
+            prediction = np.where(predictions[-1] > 0.5, 1, 0).astype(int)
             print(f'Prediction:\t{prediction[0]}')
             print(f'Target:\t\t{y_test_sample[-1][0]}')
             print(test_sample_rule)
@@ -80,7 +79,7 @@ def main():
             network.reset_memory()
 
         accuracy = round(correct_predictions / test_samples * 100, 2)
-        print(f'Correct predictions (last sequence): {correct_predictions}/{test_samples} = {accuracy}%')
+        print(f'Correct predictions: {correct_predictions}/{test_samples} = {accuracy}%')
 
         visualize_loss(training_losses, validation_losses_tuple, accuracy)
 

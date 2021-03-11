@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from abstract_classes.loss_function import LossFunction
 

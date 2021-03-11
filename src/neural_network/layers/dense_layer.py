@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from abstract_classes.activation_function import ActivationFunction
 from abstract_classes.layer import Layer
@@ -22,9 +21,6 @@ class DenseLayer(Layer):
         # Forward prop params
         self.activated_sums = []
         self.activated_sums_prev_layer = []
-
-        # Backward prop params
-        self.V_grads = []
 
         if name:
             self.name = name
@@ -62,22 +58,17 @@ class DenseLayer(Layer):
 
         batch_size = output_jacobian.shape[0]
 
-        V_grad_prev_seq = np.zeros_like(self.weights) if len(self.V_grads) == 0 else self.V_grads[-1]
+        V_grad_prev_seq = np.zeros_like(self.weights) if not hasattr(self, 'V_grad_cumulative') else self.V_grad_cumulative
 
         # TODO: Comment shapes
-        V_grad = [np.diag(output_jacobian[x]) @ np.outer((1 - activated_sum[x]**2), activated_sum_prev_layer[x]) for x in range(batch_size)]
-        V_grad = np.transpose(np.transpose(V_grad_prev_seq) + np.sum(V_grad, axis=0))
-        self.V_grads.append(V_grad)
+        self.V_grad_cumulative = self.compute_weight_gradient(output_jacobian, self.activation_func, activated_sum, activated_sum_prev_layer, batch_size, V_grad_prev_seq)
         # print('V_grad', V_grad.shape)
 
-        neighbor_jacobian = [np.diag(1 - activated_sum[x]**2) @ np.transpose(self.weights) for x in range(batch_size)]
-        neighbor_jacobian = np.sum(neighbor_jacobian, axis=0)
+        neighbor_jacobian = self.compute_neighbor_jacobian(self.activation_func, activated_sum, self.weights, batch_size)
 
         # print('output_jacobian', output_jacobian.shape)
         # print('neighbor_jacobian', neighbor_jacobian.shape)
-
         next_output_jacobian = output_jacobian @ neighbor_jacobian
 
         # print('return next_output_jacobian', next_output_jacobian.shape)
-
         return self.previous_layer.backward_pass(next_output_jacobian)

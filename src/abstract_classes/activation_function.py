@@ -7,9 +7,6 @@ class ActivationFunction(ABC):
     Abstract class for Activation Functions
     """
 
-    def __init__(self) -> None:
-        self.activations = None
-
     @abstractmethod
     def forward(self, Z: np.ndarray) -> np.ndarray:
         pass

@@ -1,12 +1,10 @@
 
-import sys
-from turtle import forward
+from xxlimited import Null
 import numpy as np
 from abstract_classes.layer import Layer
 from abstract_classes.loss_function import LossFunction
 from neural_network.layers.dense_layer import DenseLayer
 from neural_network.layers.recurrent_layer import RecurrentLayer
-from neural_network.loss_functions.mean_squared_error import MeanSquaredError
 from utils.config_parser import Config
 from utils.progress import print_progress
 
@@ -42,23 +40,27 @@ class RecurrentNetwork:
             if isinstance(layer, RecurrentLayer):
                 layer.activated_sums_prev_layer = []
                 layer.activated_sums = []
-                layer.U_grads = []
-                layer.W_grads = []
-                layer.delta_jacobians = []
+                if hasattr(layer, 'delta_jacobian_cumulative'):
+                    del layer.delta_jacobian_cumulative
+                if hasattr(layer, 'U_grad_cumulative'):
+                    del layer.U_grad_cumulative
+                if hasattr(layer, 'W_grad_cumulative'):
+                    del layer.W_grad_cumulative
 
             if isinstance(layer, DenseLayer):
                 layer.activated_sums = []
                 layer.activated_sums_prev_layer = []
-                layer.V_grads = []
+                if hasattr(layer, 'V_grad_cumulative'):
+                    del layer.V_grad_cumulative
 
     def update_weights(self):
         for layer in self.layers:
             if isinstance(layer, RecurrentLayer):
-                layer.input_weights -= layer.learning_rate * layer.U_grads[-1]
-                layer.internal_weights -= layer.learning_rate * layer.W_grads[-1]
+                layer.input_weights -= layer.learning_rate * layer.U_grad_cumulative
+                layer.internal_weights -= layer.learning_rate * layer.W_grad_cumulative
 
             if isinstance(layer, DenseLayer):
-                layer.weights -= layer.learning_rate * layer.V_grads[-1]
+                layer.weights -= layer.learning_rate * layer.V_grad_cumulative
 
     def fit(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray, epochs: int, batch_size: int = 64) -> tuple:
 
